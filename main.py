@@ -11,8 +11,8 @@ import array
 # de aztan van egy opcio, hogy valasszon egy uj randomat
 # vagy hogy az ember beadja a sajatjat
 
-ll = np.int64
-# megszokás kérdése
+n:np.int16 # sorok szama, i-s iterator
+m:np.int16 # oszlopok szama, j-s iterator
 
 v = np.zeros((1, 1), dtype=np.int8) # ez lesz a vektor ahol eltaroljuk a dolgokat
 # strukturailag eleg csunya lesz
@@ -22,13 +22,52 @@ v = np.zeros((1, 1), dtype=np.int8) # ez lesz a vektor ahol eltaroljuk a dolgoka
 # vannak maguk a cellák értékei
 # és direkt a cella felett/alatt/melett pedig egy 0/1 ertek, hogy be van-e huzva
 
+'''
+
+szóval pl
+ez a táblázat
+  0 1 2
+0 3 2 
+1   2 1
+2   3
+
+igy nezne ki
+  0  1  2    3  4    5  6 
+0 •	--	•	--	•	--	•
+1 |	 3	|	 2	|		|
+2 •	--	•	--	•	--	•
+3 |		|	 2	|	 1	|
+4 •	--	•	--	•	--	•
+5 |		|	 3	|		|
+6 •	--	•	--	•	--	•
+
+(azért van behúzva az összes vonal, hogy látszódjon, az array melyik eleme a táblázat melyik részéről táról információt)
+(igen, konkrétan a fele teljesen fölösleges, mert a pontok mindig léteznek)
+
+szép? (nem)
+de én írom ezt a hülye programot, én mondom meg hogy csináljuk
+meg amúgy az extra memória az nagyon nem befolyásol sokat
+50x50-nél nagyobb slitherlink puzzle úgyse kerül, egy 101x101-es array pedig nagyon laza
+
+(n, m) -> (2n+1, 2m+1)
+
+'''
+
 # n = 100
 # v = np.zeros((n, n), dtype=np.int64)
+
+def initwindow():
+    # pygame, do your magic
+    neadjerrortpython = 1
+
+def getrandomboard():
+    del v;
+    
 
 def main():
     # kinyitunk egy windowt
     # es felrajzoljuk
-    print("hello") 
+    initwindow()
 
 if __name__ == "__main__":
     main()
