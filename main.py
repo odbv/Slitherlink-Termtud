@@ -31,14 +31,14 @@ ez a táblázat
 2   3
 
 igy nezne ki
-  0  1  2    3  4    5  6 
-0 •	--	•	--	•	--	•
-1 |	 3	|	 2	|		|
-2 •	--	•	--	•	--	•
-3 |		|	 2	|	 1	|
-4 •	--	•	--	•	--	•
-5 |		|	 3	|		|
-6 •	--	•	--	•	--	•
+  0  1  2   3 4   5 6 
+0 •	 --	•	 --	•	 --	•
+1 |	 3	|	  2	|		  |
+2 •	 --	•	 --	•	 --	•
+3 |		  |	  2	|	  1	|
+4 •	 --	•	 --	•	 --	•
+5 |		  |	  3	|		  |
+6 •	 --	•	 --	•	 --	•
 
 (azért van behúzva az összes vonal, hogy látszódjon, az array melyik eleme a táblázat melyik részéről táról információt)
 (igen, konkrétan a fele teljesen fölösleges, mert a pontok mindig léteznek)
@@ -62,7 +62,7 @@ def initwindow():
     pg.display.set_caption("Slitherlink")
     pg.display.init()
     
-    screen.fill((255, 255, 255))    
+    screen.fill((255, 251, 187))    
     
     running: bool = True
     while running:
