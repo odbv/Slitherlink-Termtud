@@ -1,6 +1,5 @@
 import pygame as pg
 import numpy as np
-import array
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -57,8 +56,20 @@ meg amúgy az extra memória az nagyon nem befolyásol sokat
 # v = np.zeros((n, n), dtype=np.int64)
 
 def initwindow():
-    # pygame, do your magic
-    neadjerrortpython = 1
+    # pygame, do your magic  
+    pg.init()
+    screen = pg.display.set_mode((1600,900))
+    pg.display.set_caption("Slitherlink")
+    pg.display.init()
+    
+    screen.fill((255, 255, 255))    
+    
+    running: bool = True
+    while running:
+      for event in pg.event.get():
+        pg.display.flip()
+        if event.type == pg.QUIT:  # This fires when the window close button is clicked
+            running = False
 
 def getrandomboard():
     del v;
@@ -68,6 +79,8 @@ def main():
     # kinyitunk egy windowt
     # es felrajzoljuk
     initwindow()
+    
+    pg.quit()
 
 if __name__ == "__main__":
     main()
