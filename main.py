@@ -12,9 +12,10 @@ import random
 # de aztan van egy opcio, hogy valasszon egy uj randomat
 # vagy hogy az ember beadja a sajatjat
 
-n:np.int16 # sorok szama, i-s iterator
-m:np.int16 # oszlopok szama, j-s iterator
+n = 1 # sorok szama, i-s iterator
+m = 1# oszlopok szama, j-s iterator
 
+sol = np.zeros((1, 1), dtype=np.int8)
 v = np.zeros((1, 1), dtype=np.int8) # ez lesz a vektor ahol eltaroljuk a dolgokat
 # strukturailag eleg csunya lesz
 # de a lenyeg az
@@ -33,9 +34,9 @@ ez a táblázat
 2   3
 
 igy nezne ki
-  0  1  2   3 4   5 6 
+  0   1 2   3 4   5 6 
 0 •	 --	•	 --	•	 --	•
-1 |	 3	|	  2	|		  |
+1 |	  3	|	  2	|		  |
 2 •	 --	•	 --	•	 --	•
 3 |		  |	  2	|	  1	|
 4 •	 --	•	 --	•	 --	•
@@ -81,8 +82,46 @@ def initboards():
     folder_path = os.path.join(base_dir, 'pregenboards')  # folder is in the same directory as main.py
     text_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
     
+def printtotal(arr, n, m):
+    print("\nfull=\n")
+    for i in range(0, 2 * n + 1, 1):
+        for j in range(0, 2 * m + 1, 1):
+          curr = arr[i][j]
+          if(i % 2 == 0 and j % 2 == 0):
+            curr = '•'
+          if(i % 2 == 0 and j % 2 == 1):
+            #horizontal line
+            if(curr == 1):
+              curr = '⎯'
+            else:
+              curr = " "
+          if(i % 2 == 1 and j % 2 == 0):
+            if(curr == 1):
+              curr = '|'
+            else:
+              curr = " "
+          if(i % 2 == 1 and j % 2 == 1):
+            if(curr == -1):
+              curr = " "    
+          print(curr, end=" ")
+        print(" ")
+
+def printnumbers(arr, n, m):
+  print("\nnumbers=\n")
+  for i in range(1, 2 * n + 1, 2):
+      for j in range(1, 2 * m + 1, 2):
+          curr = arr[i][j]
+          if(curr == -1):
+            curr = '.'
+          print(curr, end=" ")
+      print(" ")
 
 def getrandomboard():
+    global v
+    global sol
+    global n
+    global m
+  
     v = np.zeros((1, 1), dtype=np.int8) # reset-eljuk a vektort
     # kinyitunk egy random file-t a pregenboards-bol
     
@@ -90,8 +129,8 @@ def getrandomboard():
     with open(os.path.join(folder_path, random_file), 'r') as file:
       content = file.read()
     
-    print(f"File:{random_file}")
-    print(content)
+    #print(f"File:{random_file}")
+    #print(content)
     
     parts = iter(content.split())
     n = int(next(parts))
@@ -100,10 +139,23 @@ def getrandomboard():
     sol = np.zeros((2 * n + 1, 2 *m + 1), dtype=np.int8)
     for i in range(1, 2 * n + 1, 2):
         for j in range(1, 2 * n + 1, 2):
-            v[i][j] = next(parts)
+            curr = next(parts)
+            if(curr == '.'):
+              v[i][j] = -1
+            else:
+              v[i][j] = curr
             sol[i][j] = v[i][j]
             
-    
+    for i in range(0, 2 * n + 1):
+        jstart = 0
+        if(i % 2 == 0):
+          jstart = 1
+        
+        for j in range(jstart, 2 * m + 1, 2):
+          sol[i][j] = next(parts)
+          
+    printnumbers(v, n, m)
+    printtotal(sol, n, m)
 
 def main():
     # kinyitunk egy windowt
@@ -112,7 +164,7 @@ def main():
     
     getrandomboard()
     
-    initwindow()
+    #initwindow()
     
     pg.quit()
 
