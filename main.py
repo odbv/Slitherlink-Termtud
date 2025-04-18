@@ -66,11 +66,12 @@ def initwindow():
     pg.display.init()
     
     screen.fill((255, 251, 187))    
+    pg.display.flip()
     
     running: bool = True
     while running:
       for event in pg.event.get():
-        pg.display.flip()
+        
         if event.type == pg.QUIT:  # This fires when the window close button is clicked
             running = False
 
@@ -164,7 +165,7 @@ def main():
     
     getrandomboard()
     
-    #initwindow()
+    initwindow()
     
     pg.quit()
 
