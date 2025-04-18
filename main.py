@@ -1,5 +1,7 @@
 import pygame as pg
 import numpy as np
+import os
+import random
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -71,13 +73,45 @@ def initwindow():
         if event.type == pg.QUIT:  # This fires when the window close button is clicked
             running = False
 
+def initboards():
+    # comment
+    global text_files
+    global folder_path
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    folder_path = os.path.join(base_dir, 'pregenboards')  # folder is in the same directory as main.py
+    text_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
+    
+
 def getrandomboard():
-    del v;
+    v = np.zeros((1, 1), dtype=np.int8) # reset-eljuk a vektort
+    # kinyitunk egy random file-t a pregenboards-bol
+    
+    random_file = random.choice(text_files)
+    with open(os.path.join(folder_path, random_file), 'r') as file:
+      content = file.read()
+    
+    print(f"File:{random_file}")
+    print(content)
+    
+    parts = iter(content.split())
+    n = int(next(parts))
+    m = int(next(parts))
+    v = np.zeros((2 * n +1, 2 * m + 1), dtype=np.int8)
+    sol = np.zeros((2 * n + 1, 2 *m + 1), dtype=np.int8)
+    for i in range(1, 2 * n + 1, 2):
+        for j in range(1, 2 * n + 1, 2):
+            v[i][j] = next(parts)
+            sol[i][j] = v[i][j]
+            
     
 
 def main():
     # kinyitunk egy windowt
     # es felrajzoljuk
+    initboards()
+    
+    getrandomboard()
+    
     initwindow()
     
     pg.quit()
