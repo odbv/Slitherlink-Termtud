@@ -1,4 +1,5 @@
 import pygame as pg
+import pygame_gui as pgui
 import numpy as np
 import os
 import random
@@ -13,7 +14,11 @@ import random
 # vagy hogy az ember beadja a sajatjat
 
 n = 1 # sorok szama, i-s iterator
-m = 1# oszlopok szama, j-s iterator
+m = 1 # oszlopok szama, j-s iterator
+
+solcalc : bool = False # has the solution been calculated already?
+# ez akkor igaz, ha egy pregeneralt board-ot veszunk
+# vagy ha helyben generalunk egyet
 
 sol = np.zeros((1, 1), dtype=np.int8)
 v = np.zeros((1, 1), dtype=np.int8) # ez lesz a vektor ahol eltaroljuk a dolgokat
@@ -55,33 +60,89 @@ meg amúgy az extra memória az nagyon nem befolyásol sokat
 
 '''
 
-# n = 100
-# v = np.zeros((n, n), dtype=np.int64)
-
 def initwindow():
     # pygame, do your magic  
     pg.init()
-    screen = pg.display.set_mode((1600,900))
+    height:int = 900
+    width:int = 1600
+    screen = pg.display.set_mode((width,height))
     pg.display.set_caption("Slitherlink")
     pg.display.init()
     
-    screen.fill((255, 251, 187))    
-    pg.display.flip()
+    backgroundcolor = (255, 251, 187)
     
+    background = pg.Surface((width, height))
+    background.fill(backgroundcolor)
+    
+    clock = pg.time.Clock()
+    
+    clock.tick(60)
+    
+    manager = pgui.UIManager((width, height), theme_path=os.path.join(base_dir, "testtheme.json"))
+    
+    # minden elemrol kideritjuk, hogy micsoda
+    # ha pont vagy szam, muszaj felrajzoljuk
+    # ha viszont vonal, akkor csak egy lathatatlant rajzolunk be
+    # vagyis egy olyant, ami a hatterszinnel egyenlo ;)
+    
+    y1:int; x1:int; y2:int; x2:int; # top left corner, bottom right corner
+    
+    # pythonban top left 0,0
+    # y1, x1 olyan ~5-10%al legyenek beljebb
+    # y2 csak olyan ~5-10%al, x2 pedig ~5-10% + meg a gomboknak a hely
+    
+    for i in range(0, 2 * n + 1, 1):
+      for j in range(0, 2 * m + 1, 1):
+        curr = v[i][j]
+        if(i % 2 == 0 and j % 2 == 0):
+          curr = '•'
+        if(i % 2 == 0 and j % 2 == 1):
+          #vertical line
+          if(curr == 1):
+            curr = '⎯'
+          else:
+            curr = " "
+        if(i % 2 == 1 and j % 2 == 0):
+          # horizontal line
+          if(curr == 1):
+            curr = '|'
+          else:
+            curr = " "
+        if(i % 2 == 1 and j % 2 == 1):
+          # number
+          if(curr == -1):
+            curr = " "      
+    
+    test_button = pgui.elements.UIButton(relative_rect=pg.Rect((1300, 50), (200, 100)),text='test:Hello World',manager=manager)
+
     running: bool = True
     while running:
+      time_delta = clock.tick(60)/1000.0
       for event in pg.event.get():
-        
         if event.type == pg.QUIT:  # This fires when the window close button is clicked
             running = False
+        if event.type == pgui.UI_BUTTON_PRESSED:
+          if event.ui_element == test_button:
+              print("Hello world")
+        manager.process_events(event)
+      
+      manager.update(time_delta)
+      
+      screen.blit(background, (0,0))
+      manager.draw_ui(screen)
+      
+      # mivel nem vagyok python mester
+      # az egesz grid-et ujrarajzoljuk iteracionkent
+      pg.display.update() 
 
 def initboards():
     # comment
+    global base_dir
     global text_files
-    global folder_path
+    global pregenboardspath
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    folder_path = os.path.join(base_dir, 'pregenboards')  # folder is in the same directory as main.py
-    text_files = [f for f in os.listdir(folder_path) if f.endswith('.txt')]
+    pregenboardspath = os.path.join(base_dir, 'pregenboards')  # folder is in the same directory as main.py
+    text_files = [f for f in os.listdir(pregenboardspath) if f.endswith('.txt')]
     
 def printtotal(arr, n, m):
     print("\nfull=\n")
@@ -91,7 +152,7 @@ def printtotal(arr, n, m):
           if(i % 2 == 0 and j % 2 == 0):
             curr = '•'
           if(i % 2 == 0 and j % 2 == 1):
-            #horizontal line
+            #vertical line
             if(curr == 1):
               curr = '⎯'
             else:
@@ -127,7 +188,7 @@ def getrandomboard():
     # kinyitunk egy random file-t a pregenboards-bol
     
     random_file = random.choice(text_files)
-    with open(os.path.join(folder_path, random_file), 'r') as file:
+    with open(os.path.join(pregenboardspath, random_file), 'r') as file:
       content = file.read()
     
     #print(f"File:{random_file}")
@@ -138,6 +199,7 @@ def getrandomboard():
     m = int(next(parts))
     v = np.zeros((2 * n +1, 2 * m + 1), dtype=np.int8)
     sol = np.zeros((2 * n + 1, 2 *m + 1), dtype=np.int8)
+    solcalc = True
     for i in range(1, 2 * n + 1, 2):
         for j in range(1, 2 * n + 1, 2):
             curr = next(parts)
