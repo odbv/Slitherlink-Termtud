@@ -78,7 +78,7 @@ def initwindow():
     
     clock.tick(60)
     
-    manager = pgui.UIManager((width, height), theme_path=os.path.join(base_dir, "testtheme.json"))
+    manager = pgui.UIManager((width, height), theme_path=os.path.join(resourcespath, "testtheme.json"))
     
     # minden elemrol kideritjuk, hogy micsoda
     # ha pont vagy szam, muszaj felrajzoljuk
@@ -106,7 +106,7 @@ def initwindow():
     pointradius = 20;
     fontsize = 60;
     
-    font = pg.font.Font(os.path.join(base_dir, "Lexend-Regular.ttf"), fontsize)
+    font = pg.font.Font(os.path.join(resourcespath, "Lexend-Regular.ttf"), fontsize)
     
     # rendering points
     for i in range(0, 2 * n + 1, 2):
@@ -128,7 +128,7 @@ def initwindow():
         text_surface = font.render(str(curr), True, (0,0,0))
         rect = text_surface.get_rect(center=(cx, cy))
         background.blit(text_surface, rect)
-    test_button = pgui.elements.UIButton(relative_rect=pg.Rect((1300, 50), (200, 100)),text='test:Hello World',manager=manager)
+    test_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.1 * height)),text='test:Hello World',manager=manager)
 
     running: bool = True
     while running:
@@ -153,8 +153,10 @@ def initboards():
     global base_dir
     global text_files
     global pregenboardspath
+    global resourcespath
     base_dir = os.path.dirname(os.path.abspath(__file__))
     pregenboardspath = os.path.join(base_dir, 'pregenboards')  # folder is in the same directory as main.py
+    resourcespath = os.path.join(base_dir, 'resources')
     text_files = [f for f in os.listdir(pregenboardspath) if f.endswith('.txt')]
     
 def printtotal(arr, n, m):
