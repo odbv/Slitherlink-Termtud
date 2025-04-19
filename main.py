@@ -85,33 +85,34 @@ def initwindow():
     # ha viszont vonal, akkor csak egy lathatatlant rajzolunk be
     # vagyis egy olyant, ami a hatterszinnel egyenlo ;)
     
-    y1:int; x1:int; y2:int; x2:int; # top left corner, bottom right corner
+    y1:int = 0.10 * height; x1:int = 0.10 * width; # top left corner
+    y2:int = 0.75 * height; x2:int = 0.75 * width; # bottom right corner
+    
+    ystep = (y2-y1)/n
+    xstep = (x2-x1)/m
     
     # pythonban top left 0,0
     # y1, x1 olyan ~5-10%al legyenek beljebb
     # y2 csak olyan ~5-10%al, x2 pedig ~5-10% + meg a gomboknak a hely
     
-    for i in range(0, 2 * n + 1, 1):
-      for j in range(0, 2 * m + 1, 1):
-        curr = v[i][j]
-        if(i % 2 == 0 and j % 2 == 0):
-          curr = '•'
-        if(i % 2 == 0 and j % 2 == 1):
-          #vertical line
-          if(curr == 1):
-            curr = '⎯'
-          else:
-            curr = " "
-        if(i % 2 == 1 and j % 2 == 0):
-          # horizontal line
-          if(curr == 1):
-            curr = '|'
-          else:
-            curr = " "
-        if(i % 2 == 1 and j % 2 == 1):
-          # number
-          if(curr == -1):
-            curr = " "      
+    place = np.zeros((2 * n + 1, 2 * m + 1, 2), dtype=np.int32)
+    # [i][j][0] = y cord, [i][j][1] = x cord
+    
+    # eloszor lerakjuk a pontokat
+    
+    cy:int = y1;
+    cx:int = x1
+    
+    pointradius = 20;
+    
+    for i in range(0, 2 * n + 1, 2):
+      for j in range(0, 2 * m + 1, 2):
+        place[i][j][0] = cy;
+        place[i][j][1] = cx;
+        pg.draw.circle(background, (0, 0, 0), (cx, cy), pointradius)
+        cx += xstep
+      cy += ystep;
+      cx = x1        
     
     test_button = pgui.elements.UIButton(relative_rect=pg.Rect((1300, 50), (200, 100)),text='test:Hello World',manager=manager)
 
@@ -131,9 +132,8 @@ def initwindow():
       screen.blit(background, (0,0))
       manager.draw_ui(screen)
       
-      # mivel nem vagyok python mester
-      # az egesz grid-et ujrarajzoljuk iteracionkent
-      pg.display.update() 
+      pg.display.update()
+    pg.display.flip(); 
 
 def initboards():
     # comment
