@@ -71,7 +71,7 @@ def initwindow():
     
     backgroundcolor = (255, 251, 187)
     
-    background = pg.Surface((width, height))
+    background = pg.Surface((width, height), pg.SRCALPHA)
     background.fill(backgroundcolor)
     
     clock = pg.time.Clock()
@@ -104,7 +104,11 @@ def initwindow():
     cx:int = x1
     
     pointradius = 20;
+    fontsize = 60;
     
+    font = pg.font.Font(os.path.join(base_dir, "Lexend-Regular.ttf"), fontsize)
+    
+    # rendering points
     for i in range(0, 2 * n + 1, 2):
       for j in range(0, 2 * m + 1, 2):
         place[i][j][0] = cy;
@@ -112,8 +116,18 @@ def initwindow():
         pg.draw.circle(background, (0, 0, 0), (cx, cy), pointradius)
         cx += xstep
       cy += ystep;
-      cx = x1        
-    
+      cx = x1
+    # rendering numbers
+    for i in range(1, 2 * n + 1, 2):
+      for j in range(1, 2 * m + 1, 2):
+        cy = (place[i-1][j-1][0] + place[i+1][j-1][0])/2
+        cx = (place[i-1][j-1][1] + place[i-1][j+1][1])/2
+        curr = v[i][j]
+        if(curr == -1):
+          continue;
+        text_surface = font.render(str(curr), True, (0,0,0))
+        rect = text_surface.get_rect(center=(cx, cy))
+        background.blit(text_surface, rect)
     test_button = pgui.elements.UIButton(relative_rect=pg.Rect((1300, 50), (200, 100)),text='test:Hello World',manager=manager)
 
     running: bool = True
@@ -132,8 +146,7 @@ def initwindow():
       screen.blit(background, (0,0))
       manager.draw_ui(screen)
       
-      pg.display.update()
-    pg.display.flip(); 
+      pg.display.flip()
 
 def initboards():
     # comment
