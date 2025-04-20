@@ -116,10 +116,11 @@ def initwindow():
     cx:int = x1
     
     pointradius = 18; # to do: dynamic point radius/font size calculations
-    fontsize = 60;
+    fontsize = 60
     
     # it's no sweat
-    # for n = 5, m = 5 . . . pointradius = 18, fontsize = 50
+    # for n = 5, m = 5 . . . pointradius = 18, fontsize = 60
+    # something something point density
     
     font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), fontsize)
     
@@ -173,7 +174,8 @@ def initwindow():
         pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)
     
     newgame_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.1 * height)),text='New Game',manager=manager)
-    checksol_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.18 * height), (0.18 * width, 0.1 * height)),text='Check Solution',manager=manager)
+    checksol_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.25 * height), (0.18 * width, 0.15 * height)),text='Check Solution',manager=manager)
+    showsol_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.5 * height), (0.18 * width, 0.2 * height)),text='Show Solution',manager=manager)
 
     # tehat pg.display.update az objektumonkent mukodik
     # pg.display.flip() baszik rea es ujrarajzol mindent
@@ -183,6 +185,8 @@ def initwindow():
     # mondjuk igazabol akkor is mehet az update, kell egy harmadik array ahol a line objecteket taroljuk
 
     pg.display.flip();
+
+    showsol:bool = False
 
     running: bool = True
     while running:
@@ -200,6 +204,14 @@ def initwindow():
               winx, winy = pg.display.get_window_position()
               newgame(winx, winy)
               return
+          if event.ui_element == showsol_button:
+            if(showsol == False):
+              showsol = True
+              showsol_button.set_text("Hide solution")
+            else:
+              showsol = False
+              showsol_button.set_text("Show solution")
+            
         manager.process_events(event)
       
       screen.blit(background, (0,0))
@@ -214,6 +226,13 @@ def initwindow():
         if(i % 2 == 0):
           jstart = 1
         for j in range(jstart, 2 * m +1, 2):
+          
+          if(showsol):
+            if(sol[i][j] == 1):
+              pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)
+            else:
+              pg.draw.rect(screen, (255,255,255), lines[i][j], width=0)
+            continue
           
           pg.draw.rect(screen, (255,255,255), lines[i][j], width=0)
           
@@ -302,14 +321,19 @@ def getboard(startup:bool, source):
     v = np.zeros((2 * n +1, 2 * m + 1), dtype=np.int8)
     sol = np.zeros((2 * n + 1, 2 *m + 1), dtype=np.int8)
     solcalc = True
+    
+    print(f"n={n},m={m}")
+    
     for i in range(1, 2 * n + 1, 2):
-        for j in range(1, 2 * n + 1, 2):
+        for j in range(1, 2 * m + 1, 2):
+            #print(f"i={i},j={j}, v[]=", end=" ")
             curr = next(parts)
             if(curr == '.'):
               v[i][j] = -1
             else:
               v[i][j] = curr
             sol[i][j] = v[i][j]
+            #print(v[i][j])
             
     for i in range(0, 2 * n + 1):
         jstart = 0
