@@ -61,6 +61,11 @@ meg amúgy az extra memória az nagyon nem befolyásol sokat
 '''
 
 def initwindow():
+    global n
+    global m
+    global v
+    global sol
+    
     # pygame, do your magic  
     pg.init()
     height:int = 900
@@ -74,8 +79,10 @@ def initwindow():
     # nem is égeti ki az ember szemét éjszaka
     # de nem is az a full fekete
     
-    background = pg.Surface((width, height), pg.SRCALPHA)
+    background = pg.Surface((width, height))
     background.fill(backgroundcolor)
+    foreground = pg.Surface((width, height), pg.SRCALPHA)
+    foreground.fill((0,0,0,0))
     
     clock = pg.time.Clock()
     
@@ -124,7 +131,7 @@ def initwindow():
       for j in range(0, 2 * m + 1, 2):
         place[i][j][0] = cy;
         place[i][j][1] = cx;
-        pg.draw.circle(background, (0, 0, 0), (cx, cy), pointradius)
+        pg.draw.circle(foreground, (0, 0, 0), (cx, cy), pointradius)
         cx += xstep
       cy += ystep;
       cx = x1
@@ -141,6 +148,28 @@ def initwindow():
         rect = text_surface.get_rect(center=(cx, cy))
         background.blit(text_surface, rect)
     
+    # precompute lines
+    for i in range(0, 2 * n + 1, 1):
+      jstart = 0
+      if(i % 2 == 0):
+        jstart = 1
+      for j in range(jstart, 2 * m +1, 2):
+        cx = 1; cy = 1; rectheight = 1; rectwidth = 1;
+        adjy = pointradius * 0.28
+        adjx = pointradius * 0.28
+        if(i % 2 == 0):
+          # horizontal block
+          cx = place[i][j-1][1] - adjx; cy = place[i][j-1][0] - adjy
+          rectwidth = place[i][j+1][1] - place[i][j-1][1];
+          rectheight = pointradius * 0.75
+        else:
+          # vertical block
+          cx = place[i-1][j][1] - adjx; cy = place[i-1][j][0] - adjy
+          rectwidth = pointradius * 0.75
+          rectheight = place[i+1][j][0] - place[i-1][j][0];
+        lines[i][j] = pg.Rect(cx, cy, rectwidth, rectheight)
+        pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)
+    
     test_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.1 * height)),text='test:Hello World',manager=manager)
 
     # tehat pg.display.update az objektumonkent mukodik
@@ -155,43 +184,45 @@ def initwindow():
     running: bool = True
     while running:
       time_delta = clock.tick(60)/1000.0
+      mousepress:bool = False
+      mousecords = (1,1)
       for event in pg.event.get():
         if event.type == pg.QUIT:  # This fires when the window close button is clicked
             running = False
+        if event.type == pg.MOUSEBUTTONDOWN:
+          mousepress = True
+          mousecords = event.pos
         if event.type == pgui.UI_BUTTON_PRESSED:
           if event.ui_element == test_button:
               print("Hello world")
         manager.process_events(event)
       
-      manager.update(time_delta)
-      
       screen.blit(background, (0,0))
+      manager.update(time_delta)
       manager.draw_ui(screen)
       
-      # rendering lines
+      if(mousepress):
+        print(f"Mouse click at {mousecords}")
+      
       for i in range(0, 2 * n + 1, 1):
         jstart = 0
         if(i % 2 == 0):
           jstart = 1
         for j in range(jstart, 2 * m +1, 2):
+          
+          pg.draw.rect(screen, (255,255,255), lines[i][j], width=0)
+          
+          if(mousepress):
+            if(lines[i][j].collidepoint(mousecords)):
+              print(f"Mouse press detected by {i, j}")
+              v[i][j] = 1 - v[i][j]
+          
           if(v[i][j] == 0):
             continue
-          
-          cx = 1; cy = 1; rectheight = 1; rectwidth = 1;
-          adj = pointradius * 0.2
-          if(i % 2 == 0):
-            # horizontal block
-            cx = place[i][j-1][1] - adj; cy = place[i][j-1][0] - adj
-            rectwidth = place[i][j+1][1] - place[i][j-1][1];
-            rectheight = pointradius * 0.75
-          else:
-            # vertical block
-            cx = place[i-1][j][1] - adj; cy = place[i-1][j][0] - adj
-            rectwidth = pointradius * 0.75
-            rectheight = place[i+1][j][0] - place[i-1][j][0];
-          lines[i][j] = pg.Rect(cx, cy, rectwidth, rectheight)
-          pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)
+              
+          pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)      
       
+      screen.blit(foreground, (0,0))
       pg.display.flip()
 
 def initboards():
