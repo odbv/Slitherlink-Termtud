@@ -325,6 +325,23 @@ def checkifvalid() -> bool:
         return ret              
   
   # and now I'm starting to wonder whether we need flood test at all?
+  # hmm
+  # we
+  # think, for example, of this 2 x 3 grid
+  # 3 . 3
+  # 3 . 3
+  '''
+  
+  the following solution:
+ • ⎯ •   • ⎯ •
+ | 3 |   | 3 |
+ •   •   •   •
+ | 3 |   | 3 |
+ • ⎯ •   • ⎯ •
+  would pass by current standards
+  even though it's not correct
+  
+  '''
   
   return True
 
