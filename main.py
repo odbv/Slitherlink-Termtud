@@ -1,6 +1,8 @@
 import pygame as pg
 import pygame_gui as pgui
 import numpy as np
+import tkinter as tk
+from tkinter import filedialog
 import os
 import random
 
@@ -170,7 +172,8 @@ def initwindow():
         lines[i][j] = pg.Rect(cx, cy, rectwidth, rectheight)
         pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)
     
-    test_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.1 * height)),text='test:Hello World',manager=manager)
+    newgame_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.1 * height)),text='New Game',manager=manager)
+    checksol_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.18 * height), (0.18 * width, 0.1 * height)),text='Check Solution',manager=manager)
 
     # tehat pg.display.update az objektumonkent mukodik
     # pg.display.flip() baszik rea es ujrarajzol mindent
@@ -193,8 +196,9 @@ def initwindow():
           mousepress = True
           mousecords = event.pos
         if event.type == pgui.UI_BUTTON_PRESSED:
-          if event.ui_element == test_button:
-              print("Hello world")
+          if event.ui_element == newgame_button:
+              newgame()
+              return
         manager.process_events(event)
       
       screen.blit(background, (0,0))
@@ -280,7 +284,7 @@ def getrandomboard():
     # kinyitunk egy random file-t a pregenboards-bol
     
     #random_file = random.choice(text_files)
-    with open(os.path.join(pregenboardspath, "example.txt"), 'r') as file:
+    with open(os.path.join(pregenboardspath, "example_5x5.txt"), 'r') as file:
       content = file.read()
     
     #print(f"File:{random_file}")
@@ -311,6 +315,9 @@ def getrandomboard():
           
     printnumbers(v, n, m)
     printtotal(sol, n, m)
+
+def newgame():
+  a = 1
 
 def main():
     # kinyitunk egy windowt

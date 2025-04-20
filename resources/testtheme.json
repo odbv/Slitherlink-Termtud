@@ -10,6 +10,10 @@
             "normal_text": "White"
 
         },
+        "font":{
+            "name": "ComicSansMS",
+            "size": "36"
+        },
         "misc":
         {
             "shape": "rounded_rectangle",
