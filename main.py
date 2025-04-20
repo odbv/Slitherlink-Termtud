@@ -115,6 +115,19 @@ def initwindow():
     cy:int = y1;
     cx:int = x1
     
+    '''
+    
+    !!!!!!
+    
+    TO DO
+    
+    VARIABLE POINT SIZE
+    VARIABLE FONT SIZE
+    
+    !!!!!
+    
+    '''
+    
     pointradius = 18; # to do: dynamic point radius/font size calculations
     fontsize = 60
     
@@ -343,6 +356,13 @@ def checkifvalid() -> bool:
   
   '''
   
+  # so, next idea:
+  # we still do a flood fill
+  # except, we treat the lines as the walkable path
+  # and everythign else as the walls
+  # and if there are unvisited lines after
+  # well, its incorrect
+   
   return True
 
 def initboards():
