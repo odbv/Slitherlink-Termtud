@@ -98,7 +98,7 @@ def initwindow():
     # vagyis egy olyant, ami a hatterszinnel egyenlo ;)
     
     y1:int = 0.10 * height; x1:int = 0.10 * width; # top left corner
-    y2:int = 0.75 * height; x2:int = 0.75 * width; # bottom right corner
+    y2:int = 0.85 * height; x2:int = 0.75 * width; # bottom right corner
     
     ystep = (y2-y1)/n
     xstep = (x2-x1)/m
@@ -174,7 +174,7 @@ def initwindow():
         pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)
     
     newgame_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.1 * height)),text='New Game',manager=manager)
-    checksol_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.25 * height), (0.18 * width, 0.15 * height)),text='Check Solution',manager=manager)
+    checksol_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.25 * height), (0.18 * width, 0.15 * height)),text='Check if valid',manager=manager)
     showsol_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.5 * height), (0.18 * width, 0.2 * height)),text='Show Solution',manager=manager)
 
     # tehat pg.display.update az objektumonkent mukodik
@@ -204,13 +204,19 @@ def initwindow():
               winx, winy = pg.display.get_window_position()
               newgame(winx, winy)
               return
+          if event.ui_element == checksol_button:
+            valid:bool = checkifvalid()
+            if(valid):
+              print("Correct solution! Good job!")
+            else:
+              print("That still needs some work :/")
           if event.ui_element == showsol_button:
             if(showsol == False):
               showsol = True
-              showsol_button.set_text("Hide solution")
+              showsol_button.set_text("Hide Solution")
             else:
               showsol = False
-              showsol_button.set_text("Show solution")
+              showsol_button.set_text("Show Solution")
             
         manager.process_events(event)
       
@@ -220,6 +226,8 @@ def initwindow():
       
       #if(mousepress):
         #print(f"Mouse click at {mousecords}")
+      
+      inactiveedgecolor = (159, 214, 173)
       
       for i in range(0, 2 * n + 1, 1):
         jstart = 0
@@ -231,10 +239,10 @@ def initwindow():
             if(sol[i][j] == 1):
               pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)
             else:
-              pg.draw.rect(screen, (255,255,255), lines[i][j], width=0)
+              pg.draw.rect(screen, inactiveedgecolor, lines[i][j], width=0)
             continue
           
-          pg.draw.rect(screen, (255,255,255), lines[i][j], width=0)
+          pg.draw.rect(screen, inactiveedgecolor, lines[i][j], width=0)
           
           if(mousepress):
             if(lines[i][j].collidepoint(mousecords)):
@@ -248,6 +256,77 @@ def initwindow():
       
       screen.blit(foreground, (0,0))
       pg.display.flip()
+
+def valid(i, j) -> bool:
+  global n
+  global m
+  
+  if(i >= 0 and j >= 0 and i < 2 * n +1 and j < 2 * m + 1):
+    return True
+  else:
+    return False
+
+def checkifvalid() -> bool:
+  
+  global n
+  global m
+  global v
+  global sol
+  
+  ret:bool = True
+  
+  # 3 tests:
+  # point test : checks for each point: each one must have either 0 or 2 lines attached to it
+  # cell test : checks for each cell, whether its neighbouring active edges equals its value
+  # flood test : checks whether a flood fill is able to fill the entire grid
+  
+  ground = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+  
+  # point test
+  for i in range(0, 2 * n + 1, 2):
+    for j in range(0, 2 * m + 1, 2):
+      actedges = 0
+      if(valid(i, j-1)):
+        actedges += v[i][j-1]
+        ground[i][j-1] = v[i][j-1]
+      if(valid(i,j+1)):
+        actedges += v[i][j+1]
+        ground[i][j+1] = v[i][j+1]
+      if(valid(i+1, j)):
+        actedges += v[i+1][j]
+        ground[i+1][j] = v[i+1][j]
+      if(valid(i-1, j)):
+        actedges += v[i-1][j]
+        ground[i-1][j] = v[i-1][j]
+      
+      if(actedges == 0):
+        ground[i][j] = 0;
+      if(actedges == 2):
+        ground[i][j] = 1
+      
+      if(actedges != 0 and actedges != 2):
+        print("Point test failed")
+        ret = False
+        return ret
+      
+  # cell test
+  for i in range(1, 2 * n + 1, 2):
+    for j in range(1, 2 * m + 1, 2):
+      if(v[i][j] == -1):
+        continue
+      actedges = 0
+      actedges += v[i-1][j]
+      actedges += v[i+1][j]
+      actedges += v[i][j-1]
+      actedges += v[i][j+1]
+      if(actedges != v[i][j]):
+        print("Cell test failed")
+        ret = False
+        return ret              
+  
+  # and now I'm starting to wonder whether we need flood test at all?
+  
+  return True
 
 def initboards():
     # comment
@@ -307,7 +386,7 @@ def getboard(startup:bool, source):
     content = 1
     
     if(startup):
-      with open(os.path.join(pregenboardspath, "example_5x5.txt"), 'r') as file:
+      with open(os.path.join(pregenboardspath, "example_3x3.txt"), 'r') as file:
         content = file.read()
     else:
       with open(source, 'r') as file:
