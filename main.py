@@ -197,7 +197,8 @@ def initwindow():
           mousecords = event.pos
         if event.type == pgui.UI_BUTTON_PRESSED:
           if event.ui_element == newgame_button:
-              newgame()
+              winx, winy = pg.display.get_window_position()
+              newgame(winx, winy)
               return
         manager.process_events(event)
       
@@ -205,8 +206,8 @@ def initwindow():
       manager.update(time_delta)
       manager.draw_ui(screen)
       
-      if(mousepress):
-        print(f"Mouse click at {mousecords}")
+      #if(mousepress):
+        #print(f"Mouse click at {mousecords}")
       
       for i in range(0, 2 * n + 1, 1):
         jstart = 0
@@ -218,7 +219,7 @@ def initwindow():
           
           if(mousepress):
             if(lines[i][j].collidepoint(mousecords)):
-              print(f"Mouse press detected by {i, j}")
+              #print(f"Mouse press detected by {i, j}")
               v[i][j] = 1 - v[i][j]
           
           if(v[i][j] == 0):
@@ -274,7 +275,7 @@ def printnumbers(arr, n, m):
           print(curr, end=" ")
       print(" ")
 
-def getrandomboard():
+def getboard(startup:bool, source):
     global v
     global sol
     global n
@@ -284,9 +285,14 @@ def getrandomboard():
     # kinyitunk egy random file-t a pregenboards-bol
     
     #random_file = random.choice(text_files)
-    with open(os.path.join(pregenboardspath, "example_5x5.txt"), 'r') as file:
-      content = file.read()
+    content = 1
     
+    if(startup):
+      with open(os.path.join(pregenboardspath, "example_5x5.txt"), 'r') as file:
+        content = file.read()
+    else:
+      with open(source, 'r') as file:
+        content = file.read()
     #print(f"File:{random_file}")
     #print(content)
     
@@ -316,15 +322,30 @@ def getrandomboard():
     printnumbers(v, n, m)
     printtotal(sol, n, m)
 
-def newgame():
-  a = 1
+def newgame(winx, winy):
+  root = tk.Tk()
+  root.withdraw()
+  root.geometry(f"+{winx}+{winy}")
+  root.update()
+  
+  file_path = filedialog.askopenfilename(
+        title="Select a text file",
+        initialdir=pregenboardspath,
+        filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+  )
+  
+  root.destroy()
+  
+  getboard(False, file_path)
+  pg.quit()
+  initwindow()
 
 def main():
     # kinyitunk egy windowt
     # es felrajzoljuk
     initboards()
     
-    getrandomboard()
+    getboard(True, "dummy")
     
     initwindow()
     
