@@ -70,7 +70,9 @@ def initwindow():
     pg.display.init()
     
     backgroundcolor = (3, 94, 29)
-    boardbackgroundcolor = (12, 117, 42)
+    boardbackgroundcolor = (12, 117, 42) # egy kellemes zold hatter
+    # nem is égeti ki az ember szemét éjszaka
+    # de nem is az a full fekete
     
     background = pg.Surface((width, height), pg.SRCALPHA)
     background.fill(backgroundcolor)
@@ -104,13 +106,18 @@ def initwindow():
     cy:int = y1;
     cx:int = x1
     
-    pointradius = 20;
+    pointradius = 18; # to do: dynamic point radius/font size calculations
     fontsize = 60;
     
-    font = pg.font.Font(os.path.join(resourcespath, "Lexend-Regular.ttf"), fontsize)
+    # it's no sweat
+    # for n = 5, m = 5 . . . pointradius = 18, fontsize = 50
+    
+    font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), fontsize)
     
     # rendering a second background?
     pg.draw.rect(background, boardbackgroundcolor, pg.Rect(x1 - 0.02 * width, y1 - 0.02 * width, (x2-x1) * 1.06, (y2-y1) * 1.1))
+    
+    lines = np.empty((2*n + 1, 2 * m + 1), dtype=object)
     
     # rendering points
     for i in range(0, 2 * n + 1, 2):
@@ -121,6 +128,7 @@ def initwindow():
         cx += xstep
       cy += ystep;
       cx = x1
+    
     # rendering numbers
     for i in range(1, 2 * n + 1, 2):
       for j in range(1, 2 * m + 1, 2):
@@ -132,6 +140,7 @@ def initwindow():
         text_surface = font.render(str(curr), True, (0,0,0))
         rect = text_surface.get_rect(center=(cx, cy))
         background.blit(text_surface, rect)
+    
     test_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.1 * height)),text='test:Hello World',manager=manager)
 
     # tehat pg.display.update az objektumonkent mukodik
@@ -140,6 +149,8 @@ def initwindow():
     # tehat egy atlagos loopban, amikor csak toggle-elunk egy elt, akkor nekunk csak display.update kell
     # display.flip csak akkor kell, amikor direkt berajzoljuk az egesz solutiont
     # mondjuk igazabol akkor is mehet az update, kell egy harmadik array ahol a line objecteket taroljuk
+
+    pg.display.flip();
 
     running: bool = True
     while running:
@@ -157,18 +168,42 @@ def initwindow():
       screen.blit(background, (0,0))
       manager.draw_ui(screen)
       
-      pg.display.update()
+      # rendering lines
+      for i in range(0, 2 * n + 1, 1):
+        jstart = 0
+        if(i % 2 == 0):
+          jstart = 1
+        for j in range(jstart, 2 * m +1, 2):
+          if(v[i][j] == 0):
+            continue
+          
+          cx = 1; cy = 1; rectheight = 1; rectwidth = 1;
+          adj = pointradius * 0.2
+          if(i % 2 == 0):
+            # horizontal block
+            cx = place[i][j-1][1] - adj; cy = place[i][j-1][0] - adj
+            rectwidth = place[i][j+1][1] - place[i][j-1][1];
+            rectheight = pointradius * 0.75
+          else:
+            # vertical block
+            cx = place[i-1][j][1] - adj; cy = place[i-1][j][0] - adj
+            rectwidth = pointradius * 0.75
+            rectheight = place[i+1][j][0] - place[i-1][j][0];
+          lines[i][j] = pg.Rect(cx, cy, rectwidth, rectheight)
+          pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)
+      
+      pg.display.flip()
 
 def initboards():
     # comment
     global base_dir
-    global text_files
+    #global text_files
     global pregenboardspath
     global resourcespath
     base_dir = os.path.dirname(os.path.abspath(__file__))
     pregenboardspath = os.path.join(base_dir, 'pregenboards')  # folder is in the same directory as main.py
     resourcespath = os.path.join(base_dir, 'resources')
-    text_files = [f for f in os.listdir(pregenboardspath) if f.endswith('.txt')]
+    #text_files = [f for f in os.listdir(pregenboardspath) if f.endswith('.txt')]
     
 def printtotal(arr, n, m):
     print("\nfull=\n")
@@ -213,8 +248,8 @@ def getrandomboard():
     v = np.zeros((1, 1), dtype=np.int8) # reset-eljuk a vektort
     # kinyitunk egy random file-t a pregenboards-bol
     
-    random_file = random.choice(text_files)
-    with open(os.path.join(pregenboardspath, random_file), 'r') as file:
+    #random_file = random.choice(text_files)
+    with open(os.path.join(pregenboardspath, "example.txt"), 'r') as file:
       content = file.read()
     
     #print(f"File:{random_file}")
