@@ -69,7 +69,8 @@ def initwindow():
     pg.display.set_caption("Slitherlink")
     pg.display.init()
     
-    backgroundcolor = (255, 251, 187)
+    backgroundcolor = (3, 94, 29)
+    boardbackgroundcolor = (12, 117, 42)
     
     background = pg.Surface((width, height), pg.SRCALPHA)
     background.fill(backgroundcolor)
@@ -108,6 +109,9 @@ def initwindow():
     
     font = pg.font.Font(os.path.join(resourcespath, "Lexend-Regular.ttf"), fontsize)
     
+    # rendering a second background?
+    pg.draw.rect(background, boardbackgroundcolor, pg.Rect(x1 - 0.02 * width, y1 - 0.02 * width, (x2-x1) * 1.06, (y2-y1) * 1.1))
+    
     # rendering points
     for i in range(0, 2 * n + 1, 2):
       for j in range(0, 2 * m + 1, 2):
@@ -130,6 +134,13 @@ def initwindow():
         background.blit(text_surface, rect)
     test_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.1 * height)),text='test:Hello World',manager=manager)
 
+    # tehat pg.display.update az objektumonkent mukodik
+    # pg.display.flip() baszik rea es ujrarajzol mindent
+    
+    # tehat egy atlagos loopban, amikor csak toggle-elunk egy elt, akkor nekunk csak display.update kell
+    # display.flip csak akkor kell, amikor direkt berajzoljuk az egesz solutiont
+    # mondjuk igazabol akkor is mehet az update, kell egy harmadik array ahol a line objecteket taroljuk
+
     running: bool = True
     while running:
       time_delta = clock.tick(60)/1000.0
@@ -146,7 +157,7 @@ def initwindow():
       screen.blit(background, (0,0))
       manager.draw_ui(screen)
       
-      pg.display.flip()
+      pg.display.update()
 
 def initboards():
     # comment
