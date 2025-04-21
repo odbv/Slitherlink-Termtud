@@ -128,12 +128,17 @@ def initwindow():
     
     '''
     
-    pointradius = 18; # to do: dynamic point radius/font size calculations
-    fontsize = 60
+    pointradius = (5 * 18)/max(n,m); # to do: dynamic point radius/font size calculations
+    fontsize = int(pointradius * 3.33)
     
     # it's no sweat
     # for n = 5, m = 5 . . . pointradius = 18, fontsize = 60
-    # something something point density
+    # something something point density  
+    
+    # so take whichever is bigger and go by that
+    # so based on that:
+    
+    # tehat ez egy forditott aranyossang : 5 * 18 = max(n,m) * (pointradius_current)    
     
     font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), fontsize)
     
