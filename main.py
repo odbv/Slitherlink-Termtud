@@ -115,22 +115,10 @@ def initwindow():
     cy:int = y1;
     cx:int = x1
     
-    '''
-    
-    !!!!!!
-    
-    TO DO
-    
-    VARIABLE POINT SIZE
-    VARIABLE FONT SIZE
-    
-    !!!!!
-    
-    '''
-    
-    pointradius = (5 * 18)/max(n,m); # to do: dynamic point radius/font size calculations
+    pointradius = (5 * 18)/max(n,m);
     fontsize = int(pointradius * 3.33)
     
+    # dynamic point radius calculation
     # it's no sweat
     # for n = 5, m = 5 . . . pointradius = 18, fontsize = 60
     # something something point density  
@@ -206,6 +194,8 @@ def initwindow():
 
     showsol:bool = False
 
+    showingcorectness:bool = False
+
     running: bool = True
     while running:
       time_delta = clock.tick(60)/1000.0
@@ -217,17 +207,17 @@ def initwindow():
         if event.type == pg.MOUSEBUTTONDOWN:
           mousepress = True
           mousecords = event.pos
+          if(showingcorectness):
+            showingcorectness = False
+            valid = False
         if event.type == pgui.UI_BUTTON_PRESSED:
           if event.ui_element == newgame_button:
               winx, winy = pg.display.get_window_position()
-              newgame(winx, winy)
+              newgame_pregen(winx, winy)
               return
           if event.ui_element == checksol_button:
             valid:bool = checkifvalid()
-            if(valid):
-              print("Correct solution! Good job!")
-            else:
-              print("That still needs some work :/")
+            showingcorectness = True
           if event.ui_element == showsol_button:
             if(showsol == False):
               showsol = True
@@ -239,8 +229,6 @@ def initwindow():
         manager.process_events(event)
       
       screen.blit(background, (0,0))
-      manager.update(time_delta)
-      manager.draw_ui(screen)
       
       #if(mousepress):
         #print(f"Mouse click at {mousecords}")
@@ -273,6 +261,26 @@ def initwindow():
           pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)      
       
       screen.blit(foreground, (0,0))
+      
+      if(showingcorectness):
+        if(valid):
+              print("Correct solution! Good job!")
+              validation_box = pgui.elements.UITextBox(
+                html_text='<div align="center"><font size=4><b>Correct solution!</b><br>Good job!</font></div>',
+                relative_rect=pg.Rect((width * 0.25, height * 0.25), (width * 0.4, height * 0.4)),
+                manager=manager
+              )
+        else:
+              print("That still needs some work :/")
+              validation_box = pgui.elements.UITextBox(
+                html_text='<center><font size=4><b>Incorrect solution</b><br>That still needs some work :/</font></center>',
+                relative_rect=pg.Rect((width * 0.25, height * 0.25), (width * 0.4, height * 0.4)),
+                manager=manager
+              )       
+      manager.update(time_delta)
+      manager.draw_ui(screen)
+      if 'validation_box' in locals():
+        validation_box.kill()
       pg.display.flip()
 
 def valid(i, j) -> bool:
@@ -420,6 +428,7 @@ def getboard(startup:bool, source):
     global sol
     global n
     global m
+    global solcalc
   
     v = np.zeros((1, 1), dtype=np.int8) # reset-eljuk a vektort
     # kinyitunk egy random file-t a pregenboards-bol
@@ -439,9 +448,15 @@ def getboard(startup:bool, source):
     parts = iter(content.split())
     n = int(next(parts))
     m = int(next(parts))
+    solcheck = int(next(parts))
     v = np.zeros((2 * n +1, 2 * m + 1), dtype=np.int8)
     sol = np.zeros((2 * n + 1, 2 *m + 1), dtype=np.int8)
     solcalc = True
+    
+    if(solcheck == 1):
+      solcalc = True
+    else:
+      solcalc = False
     
     print(f"n={n},m={m}")
     
@@ -455,19 +470,21 @@ def getboard(startup:bool, source):
               v[i][j] = curr
             sol[i][j] = v[i][j]
             #print(v[i][j])
-            
-    for i in range(0, 2 * n + 1):
-        jstart = 0
-        if(i % 2 == 0):
-          jstart = 1
-        
-        for j in range(jstart, 2 * m + 1, 2):
-          sol[i][j] = next(parts)
+     
+    if(solcalc == True):       
+      for i in range(0, 2 * n + 1):
+          jstart = 0
+          if(i % 2 == 0):
+            jstart = 1
+          
+          for j in range(jstart, 2 * m + 1, 2):
+            sol[i][j] = next(parts)
           
     printnumbers(v, n, m)
-    printtotal(sol, n, m)
+    if(solcalc):
+      printtotal(sol, n, m)
 
-def newgame(winx, winy):
+def newgame_pregen(winx, winy):
   root = tk.Tk()
   root.withdraw()
   root.geometry(f"+{winx}+{winy}")
