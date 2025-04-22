@@ -265,18 +265,16 @@ def initwindow():
       screen.blit(foreground, (0,0))
       
       if(showingcorectness):
-        print(f"width={width}, height={height}")
-        print(f"width*0.3={width * 0.3}, height*0.25={height*0.25}")
-        temprect = pg.Rect(width * 0.1, height * 0.25, width * 0.6, height * 0.5)
+        temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.64, height * 0.5)
         pg.draw.rect(foreforeground, (0,0,0), temprect)
         if(valid):
               #print("Correct solution! Good job!")
-              text_surf = font.render("Correct solution!\nGood job!", True, (255, 255, 255))
+              text_surf = font.render("Correct solution", True, (255, 255, 255))
               text_rect = text_surf.get_rect(center=temprect.center)
               foreforeground.blit(text_surf, text_rect)
         else:
               #print("That still needs some work :/")
-              text_surf = font.render("Incorrect solution!\nThat still needs some work :/", True, (255, 255, 255))
+              text_surf = font.render("Incorrect solution", True, (255, 255, 255))
               text_rect = text_surf.get_rect(center=temprect.center)
               foreforeground.blit(text_surf, text_rect)
               
