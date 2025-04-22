@@ -85,6 +85,8 @@ def initwindow():
     background.fill(backgroundcolor)
     foreground = pg.Surface((width, height), pg.SRCALPHA)
     foreground.fill((0,0,0,0))
+    foreforeground = pg.Surface((width, height), pg.SRCALPHA)
+    foreforeground.fill((0,0,0,0))
     
     clock = pg.time.Clock()
     
@@ -263,24 +265,25 @@ def initwindow():
       screen.blit(foreground, (0,0))
       
       if(showingcorectness):
+        print(f"width={width}, height={height}")
+        print(f"width*0.3={width * 0.3}, height*0.25={height*0.25}")
+        temprect = pg.Rect(width * 0.1, height * 0.25, width * 0.6, height * 0.5)
+        pg.draw.rect(foreforeground, (0,0,0), temprect)
         if(valid):
-              print("Correct solution! Good job!")
-              validation_box = pgui.elements.UITextBox(
-                html_text='<div align="center"><font size=4><b>Correct solution!</b><br>Good job!</font></div>',
-                relative_rect=pg.Rect((width * 0.25, height * 0.25), (width * 0.4, height * 0.4)),
-                manager=manager
-              )
+              #print("Correct solution! Good job!")
+              text_surf = font.render("Correct solution!\nGood job!", True, (255, 255, 255))
+              text_rect = text_surf.get_rect(center=temprect.center)
+              foreforeground.blit(text_surf, text_rect)
         else:
-              print("That still needs some work :/")
-              validation_box = pgui.elements.UITextBox(
-                html_text='<center><font size=4><b>Incorrect solution</b><br>That still needs some work :/</font></center>',
-                relative_rect=pg.Rect((width * 0.25, height * 0.25), (width * 0.4, height * 0.4)),
-                manager=manager
-              )       
+              #print("That still needs some work :/")
+              text_surf = font.render("Incorrect solution!\nThat still needs some work :/", True, (255, 255, 255))
+              text_rect = text_surf.get_rect(center=temprect.center)
+              foreforeground.blit(text_surf, text_rect)
+              
+      screen.blit(foreforeground, (0,0))
+      foreforeground.fill((0,0,0,0))
       manager.update(time_delta)
       manager.draw_ui(screen)
-      if 'validation_box' in locals():
-        validation_box.kill()
       pg.display.flip()
 
 def valid(i, j) -> bool:
