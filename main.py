@@ -67,6 +67,7 @@ def initwindow():
     global m
     global v
     global sol
+    global solcalc
     
     # pygame, do your magic  
     pg.init()
@@ -237,6 +238,11 @@ def initwindow():
       
       inactiveedgecolor = (159, 214, 173)
       
+      if(showsol):
+        if(solcalc == False):
+          solcalc = True
+          calculatesolution()
+      
       for i in range(0, 2 * n + 1, 1):
         jstart = 0
         if(i % 2 == 0):
@@ -249,7 +255,7 @@ def initwindow():
             else:
               pg.draw.rect(screen, inactiveedgecolor, lines[i][j], width=0)
             continue
-          
+    
           pg.draw.rect(screen, inactiveedgecolor, lines[i][j], width=0)
           
           if(mousepress):
@@ -265,8 +271,13 @@ def initwindow():
       screen.blit(foreground, (0,0))
       
       if(showingcorectness):
-        temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.64, height * 0.5)
-        pg.draw.rect(foreforeground, (0,0,0), temprect)
+        validityboxcolor = (145, 227, 125)
+        temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
+        pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
+        font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), 100) 
+        # ez kurva sketchy
+        # atallitom a font size-ot 100-ra manualisan, hogy ezt akkoraba irja ki
+        # aztan visszaallitom az alapmeretre
         if(valid):
               #print("Correct solution! Good job!")
               text_surf = font.render("Correct solution", True, (255, 255, 255))
@@ -277,12 +288,26 @@ def initwindow():
               text_surf = font.render("Incorrect solution", True, (255, 255, 255))
               text_rect = text_surf.get_rect(center=temprect.center)
               foreforeground.blit(text_surf, text_rect)
+        font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), fontsize)
               
       screen.blit(foreforeground, (0,0))
       foreforeground.fill((0,0,0,0))
       manager.update(time_delta)
       manager.draw_ui(screen)
       pg.display.flip()
+
+def genboard(newn:int, newm:int):
+  global n
+  global m
+  global v
+  global sol
+  global solcalc
+  
+  n = newn
+  m = newm
+  
+  v = np.zeros((n, m), dtype=np.int8)
+  
 
 def valid(i, j) -> bool:
   global n
@@ -503,6 +528,11 @@ def newgame_pregen(winx, winy):
   pg.quit()
   initwindow()
 
+def newgame_genboard():
+  genboard()
+  pg.quit()
+  initwindow()
+
 def main():
     # kinyitunk egy windowt
     # es felrajzoljuk
@@ -513,6 +543,12 @@ def main():
     initwindow()
     
     pg.quit()
+
+def calculatesolution():
+  global n
+  global m
+  global v
+  global sol
 
 if __name__ == "__main__":
     main()
