@@ -20,6 +20,50 @@
             "shape_corner_radius": "10",
             "border_width": "2"
         }
+    },
+
+    "label":
+    {
+        "colours":
+        {
+            "normal_border": "White",
+            "normal_bg": "SlateGray",
+            "normal_text": "White"
+
+        },
+        "font":{
+            "name": "ComicSansMS",
+            "size": "36"
+        },
+        "misc":
+        {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "10",
+            "border_width": "2"
+        }
+    },
+
+    "textentryline":
+    {
+        "colours":
+        {
+            "normal_border": "White",
+            "normal_bg": "SlateGray",
+            "normal_text": "White"
+
+        },
+        "font":{
+            "name": "ComicSansMS",
+            "size": "36"
+        },
+        "misc":
+        {
+            "shape": "rounded_rectangle",
+            "shape_corner_radius": "10",
+            "border_width": "2"
+        }
     }
+
+
 
 }

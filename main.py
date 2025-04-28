@@ -3,12 +3,10 @@ import pygame_gui as pgui
 import numpy as np
 import tkinter as tk
 from tkinter import filedialog
-from tkinter import simpledialog
 import os
 import random
 import sys
 import subprocess
-import easygui
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -206,7 +204,11 @@ def initwindow():
     showingcorectness:bool = False
 
     running: bool = True
-    originalbuttons:bool = True
+    stage:int = 0
+    # stage 0: base, new game/check sol/show sol buttons
+    # stage 1: (after pressing new game) load/gen/insert buttons
+    # stage 2: (generate) two boxes for n and m, and one button for submit
+    # stage 3: (insert) one large box for the loopy format, and button for submit
     while running:
       time_delta = clock.tick(60)/1000.0
       mousepress:bool = False
@@ -221,14 +223,14 @@ def initwindow():
             showingcorectness = False
             valid = False
         if event.type == pgui.UI_BUTTON_PRESSED:
-          if(originalbuttons):
+          if(stage == 0):
             if event.ui_element == newgame_button:
                 # clear existing buttons
                 newgame_button.kill()
                 checksol_button.kill()
                 showsol_button.kill()
                 
-                originalbuttons = False
+                stage = 1
                 
                 new_pregen_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.15 * height)),text='Load board',manager=manager)
                 new_heregen_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.25 * height), (0.18 * width, 0.15 * height)),text='Generate board',manager=manager)
@@ -243,24 +245,46 @@ def initwindow():
               else:
                 showsol = False
                 showsol_button.set_text("Show Solution")
-          else:
+          elif(stage == 1):
             if event.ui_element == new_pregen_button:
               winx, winy = pg.display.get_window_position()
               newgame_pregen(winx, winy)
               return
             if event.ui_element == new_heregen_button:
 
-              winx, winy = pg.display.get_window_position()
+              new_pregen_button.kill()
+              new_heregen_button.kill()
+              new_insert_button.kill()
               
-              # TODO
-              # ha a masodik monitoron nyitom meg, nyiljon meg a faszom query is ott
-              # utalom a tkintert          
+              labeln = pgui.elements.UILabel(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.05 * width, 0.05 * height)),text="n =", manager=manager)
+              newn_button = pgui.elements.UITextEntryLine(relative_rect=pg.Rect((0.85 * width, 0.08 * height), (0.10 * width, 0.05 * height)), manager=manager)
+              labeln = pgui.elements.UILabel(relative_rect=pg.Rect((0.8 * width, 0.15 * height), (0.05 * width, 0.05 * height)),text="m =", manager=manager)
+              newm_button = pgui.elements.UITextEntryLine(relative_rect=pg.Rect((0.85 * width, 0.15 * height), (0.10 * width, 0.05 * height)), manager=manager)
               
-              newgame_genboard(winx, winy)
+              submit_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.22 * height), (0.18 * width, 0.08 * height)),text='Submit',manager=manager)
               
+              stage = 2              
             if event.ui_element == new_insert_button:
-              # open console
-              a = 1
+              new_pregen_button.kill()
+              new_heregen_button.kill()
+              new_insert_button.kill()
+              
+              stage = 3
+              label = pgui.elements.UILabel(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.05 * height)),text="Game ID:", manager=manager)
+              loopystring = pgui.elements.UITextEntryLine(relative_rect=pg.Rect((0.8 * width, 0.15 * height), (0.18 * width, 0.05 * height)), manager=manager)
+              submit_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.22 * height), (0.18 * width, 0.08 * height)),text='Submit',manager=manager)
+          
+          elif(stage == 2):
+            if event.ui_element == submit_button:
+              newn = int(newn_button.text)
+              newm = int(newm_button.text)
+              newgame_genboard(newn, newm)
+              return
+          elif(stage == 3):
+            if event.ui_element == submit_button:
+              gameid = loopystring.text
+              newgame_insertboard(gameid)
+              return
             
         manager.process_events(event)
       
@@ -553,26 +577,21 @@ def newgame_pregen(winx, winy):
   pg.quit()
   initwindow()
 
-def newgame_genboard(winx:int, winy:int):
-  # Create the tkinter root window
-  root = tk.Tk()
-  root.withdraw()  # Hide the root window
-  root.geometry(f"+{winx}+{winy}")
-  root.update()
-
-  # Ask for two input values
-  fields = ["n = ", "m = "]
-  values = easygui.multenterbox("Please provide the new board's size:", "Generator query", fields)
-              
-  newn:int = int(values[0]); newm:int = int(values[1])
-  
+def newgame_genboard(newn:int, newm:int):  
   genboard(newn, newm)
   
   pg.quit()
   initwindow()
 
-def newgame_insert():
-  dummy = 1
+def newgame_insertboard(input):
+  global v
+  global sol
+  global n
+  global m
+  global solcalc
+  
+  pg.quit()
+  initwindow()
 
 def main():
     # kinyitunk egy windowt
