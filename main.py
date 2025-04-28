@@ -4,9 +4,6 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 import os
-import random
-import sys
-import subprocess
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -583,12 +580,99 @@ def newgame_genboard(newn:int, newm:int):
   pg.quit()
   initwindow()
 
-def newgame_insertboard(input):
+def newgame_insertboard(input:str):
   global v
   global sol
   global n
   global m
   global solcalc
+  
+  # feltetelezzuk, hogy n, m < 100
+  # kb. ~40 x 40 a max amit tud renderelni
+  # marmint tud tobbet is, de akkor a click detection kezdi feladni
+  
+  # tehat
+  
+  nstr:str = ""; mstr:str = ""
+  
+  xyet:bool = False
+  tyet:bool = False
+  
+  j:int = 0
+  
+  for i in range(0, len(input), 1):
+    # csak megkeressuk az n, m-et, eloszor
+    if(input[i] == "x"):
+      xyet = True
+    if(input[i] == 't'):
+      tyet = True
+      
+    if(input[i] == ':'):
+      j = i+1
+      break
+    
+    if(xyet == False):
+      nstr += input[i]
+    elif(tyet == False and input[i] != 'x'):
+      mstr += input[i]
+  
+  input = input[j:]
+  
+  print(f"n={nstr}, m={mstr}")
+  print(input)
+  
+  solcalc = False
+  
+  n = int(nstr)
+  m = int(mstr)
+  
+  v = np.zeros((2 * n + 1 , 2 * m + 1), dtype=np.int8)
+  sol = np.zeros((2 * n + 1 , 2 * m + 1), dtype=np.int8)
+  
+  k:int = 0 # ignore current char counter
+  
+  parts = iter(input)        
+  print(f"n={n},m={m}")
+  
+  for i in range(1, 2 * n + 1, 2):
+      for j in range(1, 2 * m + 1, 2):
+          #print(f"i={i},j={j}, v[]=", end=" ")
+          
+          print(f"i={i},j={j}")
+          print(f"k={k}")
+          
+          if(k > 0):
+            v[i][j] = -1
+            sol[i][j] = -1
+            k -= 1
+            continue
+          
+          curr = next(parts)
+          
+          print(f"curr={curr}")
+          
+          if(str.isalpha(curr)):
+            k += ord(curr) - ord('a')
+            v[i][j] = -1
+            sol[i][j] = -1
+          else:
+            v[i][j] = int(curr)
+          sol[i][j] = v[i][j]
+          #print(v[i][j])
+  
+  if(solcalc == True):       
+    for i in range(0, 2 * n + 1):
+        jstart = 0
+        if(i % 2 == 0):
+          jstart = 1
+        
+        for j in range(jstart, 2 * m + 1, 2):
+          sol[i][j] = next(parts)
+        
+  printnumbers(v, n, m)
+  if(solcalc):
+    printtotal(sol, n, m)
+    
   
   pg.quit()
   initwindow()
