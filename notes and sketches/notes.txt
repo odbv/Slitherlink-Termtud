@@ -1,5 +1,4 @@
 Python 3.13.3
 
 todo:
-    check weird configurations
-    how do they look?
+    finish checker: flood fill

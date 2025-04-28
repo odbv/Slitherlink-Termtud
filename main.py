@@ -3,8 +3,11 @@ import pygame_gui as pgui
 import numpy as np
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import simpledialog
 import os
 import random
+import sys
+import subprocess
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -76,6 +79,9 @@ def initwindow():
     screen = pg.display.set_mode((width,height))
     pg.display.set_caption("Slitherlink")
     pg.display.init()
+    
+    winx, winy = pg.display.get_window_position()
+    dpg.create_context()
     
     backgroundcolor = (3, 94, 29)
     boardbackgroundcolor = (12, 117, 42) # egy kellemes zold hatter
@@ -200,6 +206,7 @@ def initwindow():
     showingcorectness:bool = False
 
     running: bool = True
+    originalbuttons:bool = True
     while running:
       time_delta = clock.tick(60)/1000.0
       mousepress:bool = False
@@ -214,20 +221,45 @@ def initwindow():
             showingcorectness = False
             valid = False
         if event.type == pgui.UI_BUTTON_PRESSED:
-          if event.ui_element == newgame_button:
+          if(originalbuttons):
+            if event.ui_element == newgame_button:
+                # clear existing buttons
+                newgame_button.kill()
+                checksol_button.kill()
+                showsol_button.kill()
+                
+                originalbuttons = False
+                
+                new_pregen_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.15 * height)),text='Load board',manager=manager)
+                new_heregen_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.25 * height), (0.18 * width, 0.15 * height)),text='Generate board',manager=manager)
+                new_insert_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.42 * height), (0.18 * width, 0.15 * height)),text='Insert board',manager=manager)         
+            if event.ui_element == checksol_button:
+              valid:bool = checkifvalid()
+              showingcorectness = True
+            if event.ui_element == showsol_button:
+              if(showsol == False):
+                showsol = True
+                showsol_button.set_text("Hide Solution")
+              else:
+                showsol = False
+                showsol_button.set_text("Show Solution")
+          else:
+            if event.ui_element == new_pregen_button:
               winx, winy = pg.display.get_window_position()
               newgame_pregen(winx, winy)
               return
-          if event.ui_element == checksol_button:
-            valid:bool = checkifvalid()
-            showingcorectness = True
-          if event.ui_element == showsol_button:
-            if(showsol == False):
-              showsol = True
-              showsol_button.set_text("Hide Solution")
-            else:
-              showsol = False
-              showsol_button.set_text("Show Solution")
+            if event.ui_element == new_heregen_button:
+
+              winx, winy = pg.display.get_window_position()
+              
+              
+              
+              newn:int = 4; newm:int = 4
+              
+              newgame_genboard(newn, newm)
+            if event.ui_element == new_insert_button:
+              # open console
+              a = 1
             
         manager.process_events(event)
       
@@ -271,7 +303,7 @@ def initwindow():
       screen.blit(foreground, (0,0))
       
       if(showingcorectness):
-        validityboxcolor = (145, 227, 125)
+        validityboxcolor = (109, 9, 143)
         temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
         pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
         font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), 100) 
@@ -296,18 +328,14 @@ def initwindow():
       manager.draw_ui(screen)
       pg.display.flip()
 
-def genboard(newn:int, newm:int):
-  global n
-  global m
-  global v
-  global sol
-  global solcalc
-  
-  n = newn
-  m = newm
-  
-  v = np.zeros((n, m), dtype=np.int8)
-  
+def dearpygui_newgenwindow(sender, app_data):
+    """Callback function for when the submit button is clicked."""
+    input1 = dpg.get_value("input1")  # Get the value from the first input field
+    input2 = dpg.get_value("input2")  # Get the value from the second input field
+    print(f"Input 1: {input1}, Input 2: {input2}")
+
+    # Optionally close the window after submission
+    dpg.delete_item("input_window")
 
 def valid(i, j) -> bool:
   global n
@@ -401,7 +429,12 @@ def checkifvalid() -> bool:
   # and everythign else as the walls
   # and if there are unvisited lines after
   # well, its incorrect
-   
+  
+  # !!!!!!
+  # TODO
+  # Finish the flood fill test!!!
+  # !!!!!
+  
   return True
 
 def initboards():
@@ -528,10 +561,13 @@ def newgame_pregen(winx, winy):
   pg.quit()
   initwindow()
 
-def newgame_genboard():
-  genboard()
+def newgame_genboard(newn:int, newm:int):
+  genboard(newn, newm)
   pg.quit()
   initwindow()
+
+def newgame_insert():
+  dummy = 1
 
 def main():
     # kinyitunk egy windowt
@@ -549,6 +585,21 @@ def calculatesolution():
   global m
   global v
   global sol
+
+def genboard(newn:int, newm:int):
+  global n
+  global m
+  global v
+  global sol
+  global solcalc
+  
+  n = newn
+  m = newm
+  
+  solcalc = True
+  
+  v = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+  sol = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
 
 if __name__ == "__main__":
     main()
