@@ -8,6 +8,7 @@ import os
 import random
 import sys
 import subprocess
+import easygui
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -81,7 +82,6 @@ def initwindow():
     pg.display.init()
     
     winx, winy = pg.display.get_window_position()
-    dpg.create_context()
     
     backgroundcolor = (3, 94, 29)
     boardbackgroundcolor = (12, 117, 42) # egy kellemes zold hatter
@@ -252,11 +252,12 @@ def initwindow():
 
               winx, winy = pg.display.get_window_position()
               
+              # TODO
+              # ha a masodik monitoron nyitom meg, nyiljon meg a faszom query is ott
+              # utalom a tkintert          
               
+              newgame_genboard(winx, winy)
               
-              newn:int = 4; newm:int = 4
-              
-              newgame_genboard(newn, newm)
             if event.ui_element == new_insert_button:
               # open console
               a = 1
@@ -327,15 +328,6 @@ def initwindow():
       manager.update(time_delta)
       manager.draw_ui(screen)
       pg.display.flip()
-
-def dearpygui_newgenwindow(sender, app_data):
-    """Callback function for when the submit button is clicked."""
-    input1 = dpg.get_value("input1")  # Get the value from the first input field
-    input2 = dpg.get_value("input2")  # Get the value from the second input field
-    print(f"Input 1: {input1}, Input 2: {input2}")
-
-    # Optionally close the window after submission
-    dpg.delete_item("input_window")
 
 def valid(i, j) -> bool:
   global n
@@ -561,8 +553,21 @@ def newgame_pregen(winx, winy):
   pg.quit()
   initwindow()
 
-def newgame_genboard(newn:int, newm:int):
+def newgame_genboard(winx:int, winy:int):
+  # Create the tkinter root window
+  root = tk.Tk()
+  root.withdraw()  # Hide the root window
+  root.geometry(f"+{winx}+{winy}")
+  root.update()
+
+  # Ask for two input values
+  fields = ["n = ", "m = "]
+  values = easygui.multenterbox("Please provide the new board's size:", "Generator query", fields)
+              
+  newn:int = int(values[0]); newm:int = int(values[1])
+  
   genboard(newn, newm)
+  
   pg.quit()
   initwindow()
 
