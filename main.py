@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import filedialog
 import os
 from collections import deque
+import time
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -14,6 +15,8 @@ from collections import deque
 # kinyit egy ablakot, es kivalaszt egy random easy slithersnake-t
 # de aztan van egy opcio, hogy valasszon egy uj randomat
 # vagy hogy az ember beadja a sajatjat
+
+testing:bool = False
 
 n = 1 # sorok szama, i-s iterator
 m = 1 # oszlopok szama, j-s iterator
@@ -294,9 +297,12 @@ def initwindow():
       inactiveedgecolor = (159, 214, 173)
       
       if(showsol):
-        if(solcalc == False):
+        if(solcalc == False or testing == True):
           solcalc = True
+          start = time.time()
           calculatesolution()
+          end = time.time()
+          print(f"Took {end-start} seconds")
       
       for i in range(0, 2 * n + 1, 1):
         jstart = 0
@@ -366,8 +372,6 @@ def checkifvalid() -> bool:
   global m
   global v
   global sol
-  
-  ret:bool = True
   
   # 3 tests:
   # point test : checks for each point: each one must have either 0 or 2 lines attached to it
@@ -664,13 +668,13 @@ def newgame_insertboard(input:str):
   
   input = input[j:]
   
-  print(f"n={nstr}, m={mstr}")
+  print(f"n={mstr}, m={nstr}")
   print(input)
   
   solcalc = False
   
-  n = int(nstr)
-  m = int(mstr)
+  n = int(mstr)
+  m = int(nstr) # this is done because it is width * height in the loopy format
   
   v = np.zeros((2 * n + 1 , 2 * m + 1), dtype=np.int8)
   sol = np.zeros((2 * n + 1 , 2 * m + 1), dtype=np.int8)
@@ -738,6 +742,13 @@ def calculatesolution():
   global m
   global v
   global sol
+  
+  # oke, szoval eloszor ezt a modszert fogom alkalmazni
+  # ha nem jon ossze, akkor meg finomitok rajta
+  # fo forrasok:
+  # modszer: https://www.dougandjean.com/slither/howitsolves.html
+  # altalanos overview: https://esolangs.org/wiki/User:Hakerh400/How_to_solve_Slitherlink_using_SAT_solver
+  # a PySAT library altal bocsatott Minisat22 solver segitsegevel
 
 def genboard(newn:int, newm:int):
   global n
