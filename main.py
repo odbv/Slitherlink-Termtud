@@ -4,6 +4,7 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 import os
+from collections import deque
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -374,6 +375,7 @@ def checkifvalid() -> bool:
   # flood test : checks whether a flood fill is able to fill the entire grid
   
   ground = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+  vis = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
   
   # point test
   for i in range(0, 2 * n + 1, 2):
@@ -443,11 +445,55 @@ def checkifvalid() -> bool:
   # and if there are unvisited lines after
   # well, its incorrect
   
-  # !!!!!!
-  # TODO
-  # Finish the flood fill test!!!
-  # !!!!!
+  #print(f"Ground:\n{ground}")
   
+  #print("Flood test:")
+  
+  q = deque()
+  # we search until we find an "active cell"
+  # ie, a ground with 1
+  found:bool = False
+  for i in range(0, 2 * n + 1, 1):
+    for j in range(0, 2 * m + 1, 1):
+      if(ground[i][j] == 1):
+        vis[i][j] = 1
+        q.append((i,j))
+        found = True
+        break
+    if(found):
+      break
+    
+  #print(f"Starting queue:{q}")
+  
+  while(len(q) > 0):
+    #print(f"Len(q)={len(q)}")
+    i, j = q.popleft()
+    #print(f"ci={i}, cj={j}")
+    
+    if(valid(i, j-1) and ground[i][j-1] == 1 and vis[i][j-1] == 0):
+      vis[i][j-1] = 1
+      q.append((i, j-1))
+      
+    if(valid(i,j+1) and ground[i][j+1] == 1 and vis[i][j+1] == 0):
+      vis[i][j+1] = 1
+      q.append((i, j+1))
+    
+    if(valid(i+1, j) and ground[i+1][j] == 1 and vis[i+1][j] == 0):
+      vis[i+1][j] = 1
+      q.append((i+1, j))
+    
+    if(valid(i-1, j) and ground[i-1][j] == 1 and vis[i-1][j] == 0):
+      vis[i-1][j] = 1
+      q.append((i-1, j))
+  
+  #print(f"vis=\n{vis}")
+      
+  for i in range(0, 2 * n + 1, 1):
+    for j in range(0, 2 * m + 1, 1):
+      if(ground[i][j] != vis[i][j]):
+        print("Flood test failed")
+        return False 
+        
   return True
 
 def initboards():
@@ -673,7 +719,6 @@ def newgame_insertboard(input:str):
   if(solcalc):
     printtotal(sol, n, m)
     
-  
   pg.quit()
   initwindow()
 
