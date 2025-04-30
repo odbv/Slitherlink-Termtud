@@ -748,7 +748,7 @@ def calculatesolution():
   # fo forrasok:
   # modszer: https://www.dougandjean.com/slither/howitsolves.html
   # altalanos overview: https://esolangs.org/wiki/User:Hakerh400/How_to_solve_Slitherlink_using_SAT_solver
-  # a PySAT library altal bocsatott Glucose4.2 solver segitsegevel
+  # a PySAT library altal bocsatott Glucose 4.2.1 solver segitsegevel
 
 def genboard(newn:int, newm:int):
   global n
