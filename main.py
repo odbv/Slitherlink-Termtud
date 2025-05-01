@@ -583,7 +583,7 @@ def getboard(startup:bool, source):
     content = 1
     
     if(startup):
-      with open(os.path.join(pregenboardspath, "example_3x3.txt"), 'r') as file:
+      with open(os.path.join(pregenboardspath, "testing_2x2.txt"), 'r') as file:
         content = file.read()
     else:
       with open(source, 'r') as file:
