@@ -23,6 +23,8 @@ import pysat
 # de aztan van egy opcio, hogy valasszon egy uj randomat
 # vagy hogy az ember beadja a sajatjat
 
+startingfile:str = "testing_2x2.txt"
+
 testing:bool = True
 nosol:bool = False
 
@@ -81,6 +83,8 @@ def initwindow():
     global solcalc
     
     global testing
+    
+    testing = True
     
     # pygame, do your magic  
     pg.init()
@@ -213,6 +217,7 @@ def initwindow():
     showsol:bool = False
 
     showingcorectness:bool = False
+    shownosol:bool = False
 
     running: bool = True
     stage:int = 0
@@ -233,6 +238,8 @@ def initwindow():
           if(showingcorectness):
             showingcorectness = False
             valid = False
+          if(shownosol):
+            shownosol = False
         if event.type == pgui.UI_BUTTON_PRESSED:
           if(stage == 0):
             if event.ui_element == newgame_button:
@@ -313,6 +320,8 @@ def initwindow():
           start = time.time()
           calculatesolution()
           end = time.time()
+          if(nosol):
+            shownosol = True
           print(f"Took {end-start} seconds")
       
       for i in range(0, 2 * n + 1, 1):
@@ -362,7 +371,7 @@ def initwindow():
               foreforeground.blit(text_surf, text_rect)
         font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), fontsize)
       
-      if(nosol):
+      if(nosol and shownosol):
         validityboxcolor = (138, 32, 32)
         temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
         pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
@@ -583,7 +592,7 @@ def getboard(startup:bool, source):
     content = 1
     
     if(startup):
-      with open(os.path.join(pregenboardspath, "testing_2x2.txt"), 'r') as file:
+      with open(os.path.join(pregenboardspath, startingfile), 'r') as file:
         content = file.read()
     else:
       with open(source, 'r') as file:
@@ -791,6 +800,9 @@ def calculatesolution():
   
   globcnf = CNF()
   
+  skippoint:bool = True
+  skipcell:bool = False
+  
   # standard edge bejaras
   for i in range(0, 2 * n + 1, 1):
     jstart = 0
@@ -801,9 +813,13 @@ def calculatesolution():
       indextocord[counter] = (i,j)
       counter += 1
   
+  firstnonedge:int = counter
+  
   # point clauses
   for i in range(0, 2 * n + 1, 2):
     for j in range(0, 2 * m + 1, 2):
+      if(skippoint):
+        continue
       actedges = 0
       edg = []
       if(valid(i, j-1)):
@@ -840,7 +856,7 @@ def calculatesolution():
         A = counter; counter += 1 # 1,2
         B = counter; counter += 1 # none
         
-        clauses = [A, B]
+        localclauses = [A, B]
         
         # 1, 2
         globcnf.append([-A, edg[0]])
@@ -852,7 +868,7 @@ def calculatesolution():
         globcnf.append([-B, -edg[1]])
         globcnf.append([edg[0], edg[1], B])
         
-        cnf = CardEnc.equals(lits=clauses, bound=1, encoding=1)
+        cnf = CardEnc.equals(lits=localclauses, bound=1, encoding=1)
         for clause in cnf.clauses:
             globcnf.append(clause)
       
@@ -864,7 +880,7 @@ def calculatesolution():
         C = counter; counter += 1 # (2,3)
         D = counter; counter += 1 # (none)
         
-        clauses = [A, B, C, D]
+        localclauses = [A, B, C, D]
         
         # 1, 2, -3
         globcnf.append([-A, edg[0]])
@@ -892,7 +908,7 @@ def calculatesolution():
         globcnf.append([-D, -edg[2]])
         globcnf.append([edg[0], edg[1], edg[2], D])
         
-        cnf = CardEnc.equals(lits=clauses, bound=1, encoding=1)
+        cnf = CardEnc.equals(lits=localclauses, bound=1, encoding=1)
         for clause in cnf.clauses:
             globcnf.append(clause)
       
@@ -906,7 +922,7 @@ def calculatesolution():
         F = counter; counter += 1 # (3,4)
         G = counter; counter += 1 # (none)
         
-        clauses = [A, B, C, D, E, F, G]
+        localclauses = [A, B, C, D, E, F, G]
         
         # so for each of these 
         # I'll have to do
@@ -981,14 +997,14 @@ def calculatesolution():
         globcnf.append([edg[0], edg[1], edg[2], edg[3], G])
         
         # final conjuction
-        cnf = CardEnc.equals(lits=clauses, bound=1, encoding=1)
+        cnf = CardEnc.equals(lits=localclauses, bound=1, encoding=1)
         for clause in cnf.clauses:
             globcnf.append(clause)      
                
   # cell clauses
   for i in range(1, 2 * n + 1, 2):
     for j in range(1, 2 * m + 1, 2):
-      if(v[i][j] == -1):
+      if(v[i][j] == -1 or skipcell):
         continue
       edgeindexes = []
       edgeindexes.append(cordtoindex[(i,j-1)])
@@ -997,6 +1013,7 @@ def calculatesolution():
       edgeindexes.append(cordtoindex[(i+1,j)])
       
       print(f"For cell at i={i},j={j}, edges around it are:{edgeindexes}")
+      print(f"v[i][j]={v[i][j]}")
       
       cnf = CardEnc.equals(lits=edgeindexes, bound=v[i][j], encoding=1)
       
@@ -1010,6 +1027,25 @@ def calculatesolution():
   with Glucose42(bootstrap_with=globcnf, with_proof=True) as temp:
     print(temp.solve())
     print(temp.get_proof())
+    model = temp.get_model()
+  
+  print(model)
+  
+  if(model == None):
+    nosol = True
+    return
+  
+  for elem in model:
+    if(abs(elem) == firstnonedge):
+      break
+    
+    ci, cj = indextocord[abs(elem)]
+    
+    yes = 1
+    if(elem < 0):
+      yes = 0
+    
+    sol[ci][cj] = yes   
   
   '''
   if g.solve():
