@@ -6,6 +6,9 @@ from tkinter import filedialog
 import os
 from collections import deque
 import time
+from pysat.solvers import Glucose42
+from pysat.card import CardEnc
+from pysat.formula import CNF
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -16,7 +19,8 @@ import time
 # de aztan van egy opcio, hogy valasszon egy uj randomat
 # vagy hogy az ember beadja a sajatjat
 
-testing:bool = False
+testing:bool = True
+nosol:bool = False
 
 n = 1 # sorok szama, i-s iterator
 m = 1 # oszlopok szama, j-s iterator
@@ -71,6 +75,8 @@ def initwindow():
     global v
     global sol
     global solcalc
+    
+    global testing
     
     # pygame, do your magic  
     pg.init()
@@ -299,6 +305,7 @@ def initwindow():
       if(showsol):
         if(solcalc == False or testing == True):
           solcalc = True
+          testing = False
           start = time.time()
           calculatesolution()
           end = time.time()
@@ -350,7 +357,20 @@ def initwindow():
               text_rect = text_surf.get_rect(center=temprect.center)
               foreforeground.blit(text_surf, text_rect)
         font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), fontsize)
-              
+      
+      if(nosol):
+        validityboxcolor = (138, 32, 32)
+        temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
+        pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
+        font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), 100) 
+        # ez kurva sketchy
+        # atallitom a font size-ot 100-ra manualisan, hogy ezt akkoraba irja ki
+        # aztan visszaallitom az alapmeretre
+        text_surf = font.render("No solution exists", True, (255, 255, 255))
+        text_rect = text_surf.get_rect(center=temprect.center)
+        foreforeground.blit(text_surf, text_rect)
+        font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), fontsize)      
+      
       screen.blit(foreforeground, (0,0))
       foreforeground.fill((0,0,0,0))
       manager.update(time_delta)
@@ -743,12 +763,94 @@ def calculatesolution():
   global v
   global sol
   
+  global nosol
+  
   # oke, szoval eloszor ezt a modszert fogom alkalmazni
   # ha nem jon ossze, akkor meg finomitok rajta
   # fo forrasok:
   # modszer: https://www.dougandjean.com/slither/howitsolves.html
   # altalanos overview: https://esolangs.org/wiki/User:Hakerh400/How_to_solve_Slitherlink_using_SAT_solver
   # a PySAT library altal bocsatott Glucose 4.2.1 solver segitsegevel
+
+  # oke, szoval legeloszor szuksegunk van egy bijektiv lekepezesre
+  # ahol minden edge kap egy egyedi id-t
+  # c++-ban kifejezve:
+  # map<pair<ll,ll>, ll> ahol egy megadott (i,j)-re kiadja, hogy milyen indexu edge van ott
+  # illetve egy map<ll,pair<ll,ll>> ami megadja, hogy az adott indexu edge melyik koordinatakert felel
+
+  cordtoindex = {}
+  indextocord = {}
+  
+  counter:int = 1
+  
+  g = Glucose42()
+  
+  # standard edge bejaras
+  for i in range(0, 2 * n + 1, 1):
+    jstart = 0
+    if(i % 2 == 0):
+      jstart = 1
+    for j in range(jstart, 2 * m +1, 2):
+      cordtoindex[(i,j)] = counter
+      indextocord[counter] = (i,j)
+      counter += 1
+  
+  # point clauses
+  for i in range(0, 2 * n + 1, 2):
+    for j in range(0, 2 * m + 1, 2):
+      actedges = 0
+      edgeindexes = []
+      if(valid(i, j-1)):
+        edgeindexes.append(cordtoindex[(i,j-1)])
+        actedges += 1
+      if(valid(i,j+1)):
+        edgeindexes.append(cordtoindex[(i,j+1)])
+        actedges += 1
+      if(valid(i+1, j)):
+        edgeindexes.append(cordtoindex[(i+1,j)])
+        actedges += 1
+      if(valid(i-1, j)):
+        edgeindexes.append(cordtoindex[(i-1,j)])
+        actedges += 1
+      #print(f"For point at i={i},j={j}, edges around it are:{edgeindexes}")
+      
+      cnf = CardEnc.equals(lits=edgeindexes, bound=2, encoding=1) # handling the exactly 2 edges clause
+      if(actedges == 2):
+        cnf.append([-edgeindexes[0], -edgeindexes[1]])
+      elif(actedges == 3):
+        cnf.append([-edgeindexes[0], -edgeindexes[1], -edgeindexes[2]])
+      elif(actedges == 4):
+        cnf.append([-edgeindexes[0], -edgeindexes[1], -edgeindexes[2], -edgeindexes[3]])
+      
+      for clause in cnf.clauses:
+        g.add_clause(clause)
+               
+  # cell clauses
+  for i in range(1, 2 * n + 1, 2):
+    for j in range(1, 2 * m + 1, 2):
+      if(v[i][j] == -1):
+        continue
+      edgeindexes = []
+      edgeindexes.append(cordtoindex[(i,j-1)])
+      edgeindexes.append(cordtoindex[(i,j+1)])
+      edgeindexes.append(cordtoindex[(i-1,j)])
+      edgeindexes.append(cordtoindex[(i+1,j)])
+      
+      #print(f"For cell at i={i},j={j}, edges around it are:{edgeindexes}")
+      
+      cnf = CardEnc.equals(lits=edgeindexes, bound=v[i][j], encoding=1)
+      
+      for clause in cnf.clauses:
+        g.add_clause(clause)
+        
+  if g.solve():
+    model = g.get_model()
+    print(f"Solution? {model}")
+  else:
+    print("No solution :'(")
+    #nosol = True
+    return
+      
 
 def genboard(newn:int, newm:int):
   global n

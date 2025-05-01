@@ -1,9 +1,8 @@
 from pysat.solvers import Glucose42
-from pysat.solvers import Minisat22
 
 g = Glucose42()
-g.add_clause([1, 2])
-g.add_clause([2, 1])
+g.add_clause([(1,2), (1,3)])
+g.add_clause([(3,4), (3,5)])
 print(g.solve())
 print(g.get_model())
 
