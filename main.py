@@ -7,9 +7,12 @@ import os
 from collections import deque
 import time
 from pysat.solvers import Glucose42
+from pysat.solvers import Cadical153
 from pysat.card import CardEnc
 from pysat.formula import CNF
 from itertools import combinations
+import logging
+import pysat
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -786,6 +789,8 @@ def calculatesolution():
   
   g = Glucose42()
   
+  globcnf = CNF()
+  
   # standard edge bejaras
   for i in range(0, 2 * n + 1, 1):
     jstart = 0
@@ -838,19 +843,18 @@ def calculatesolution():
         clauses = [A, B]
         
         # 1, 2
-        g.add_clause([-A, edg[0]])
-        g.add_clause([-A, edg[1]])
-        g.add_clause([-edg[0], -edg[1], A])
+        globcnf.append([-A, edg[0]])
+        globcnf.append([-A, edg[1]])
+        globcnf.append([-edg[0], -edg[1], A])
         
         # -1, -2
-        g.add_clause([-A, -edg[0]])
-        g.add_clause([-A, -edg[1]])
-        g.add_clause([edg[0], edg[1], A])
-        g.add_clause([A, B])
+        globcnf.append([-B, -edg[0]])
+        globcnf.append([-B, -edg[1]])
+        globcnf.append([edg[0], edg[1], B])
         
         cnf = CardEnc.equals(lits=clauses, bound=1, encoding=1)
         for clause in cnf.clauses:
-            g.add_clause(clause)
+            globcnf.append(clause)
       
       elif(actedges == 3):
         # 4 cases : 3 combinations (1,2), (1,3), (2,3) plus null
@@ -863,34 +867,34 @@ def calculatesolution():
         clauses = [A, B, C, D]
         
         # 1, 2, -3
-        g.add_clause([-A, edg[0]])
-        g.add_clause([-A, edg[1]])
-        g.add_clause([-A, -edg[2]])
-        g.add_clause([-edg[0], -edg[1], edg[2], A])
+        globcnf.append([-A, edg[0]])
+        globcnf.append([-A, edg[1]])
+        globcnf.append([-A, -edg[2]])
+        globcnf.append([-edg[0], -edg[1], edg[2], A])
         # so now A is only true if all four are true
         # add negations as needed, but this template works
         
         # 1, -2, 3,
-        g.add_clause([-B, edg[0]])
-        g.add_clause([-B, -edg[1]])
-        g.add_clause([-B, edg[2]])
-        g.add_clause([-edg[0], edg[1], -edg[2], B])
+        globcnf.append([-B, edg[0]])
+        globcnf.append([-B, -edg[1]])
+        globcnf.append([-B, edg[2]])
+        globcnf.append([-edg[0], edg[1], -edg[2], B])
         
         # -1, 2, 3
-        g.add_clause([-C, -edg[0]])
-        g.add_clause([-C, edg[1]])
-        g.add_clause([-C, edg[2]])
-        g.add_clause([edg[0], -edg[1], -edg[2], C])
+        globcnf.append([-C, -edg[0]])
+        globcnf.append([-C, edg[1]])
+        globcnf.append([-C, edg[2]])
+        globcnf.append([edg[0], -edg[1], -edg[2], C])
         
         # -1, -2, -3
-        g.add_clause([-D, -edg[0]])
-        g.add_clause([-D, -edg[1]])
-        g.add_clause([-D, -edg[2]])
-        g.add_clause([edg[0], edg[1], edg[2], D])
+        globcnf.append([-D, -edg[0]])
+        globcnf.append([-D, -edg[1]])
+        globcnf.append([-D, -edg[2]])
+        globcnf.append([edg[0], edg[1], edg[2], D])
         
         cnf = CardEnc.equals(lits=clauses, bound=1, encoding=1)
         for clause in cnf.clauses:
-            g.add_clause(clause)
+            globcnf.append(clause)
       
       elif(actedges == 4):
         # 7 cases: 6 combinations, 1 null
@@ -928,58 +932,58 @@ def calculatesolution():
         # let's get to it, I suppose
         
         # 1, 2, -3, -4
-        g.add_clause([-A, edg[0]])
-        g.add_clause([-A, edg[1]])
-        g.add_clause([-A, -edg[2]])
-        g.add_clause([-A, -edg[3]])
-        g.add_clause([-edg[0], -edg[1], edg[2], edg[3], A])
+        globcnf.append([-A, edg[0]])
+        globcnf.append([-A, edg[1]])
+        globcnf.append([-A, -edg[2]])
+        globcnf.append([-A, -edg[3]])
+        globcnf.append([-edg[0], -edg[1], edg[2], edg[3], A])
         
         # 1, -2, 3, -4
-        g.add_clause([-B, edg[0]])
-        g.add_clause([-B, -edg[1]])
-        g.add_clause([-B, edg[2]])
-        g.add_clause([-B, -edg[3]])
-        g.add_clause([-edg[0], edg[1], -edg[2], edg[3], B])
+        globcnf.append([-B, edg[0]])
+        globcnf.append([-B, -edg[1]])
+        globcnf.append([-B, edg[2]])
+        globcnf.append([-B, -edg[3]])
+        globcnf.append([-edg[0], edg[1], -edg[2], edg[3], B])
         
         # 1, -2, -3, 4
-        g.add_clause([-C, edg[0]])
-        g.add_clause([-C, -edg[1]])
-        g.add_clause([-C, -edg[2]])
-        g.add_clause([-C, edg[3]])
-        g.add_clause([-edg[0], edg[1], edg[2], -edg[3], C])
+        globcnf.append([-C, edg[0]])
+        globcnf.append([-C, -edg[1]])
+        globcnf.append([-C, -edg[2]])
+        globcnf.append([-C, edg[3]])
+        globcnf.append([-edg[0], edg[1], edg[2], -edg[3], C])
         
         # -1, 2, 3, -4
-        g.add_clause([-D, -edg[0]])
-        g.add_clause([-D, edg[1]])
-        g.add_clause([-D, edg[2]])
-        g.add_clause([-D, -edg[3]])
-        g.add_clause([edg[0], -edg[1], -edg[2], edg[3], D])
+        globcnf.append([-D, -edg[0]])
+        globcnf.append([-D, edg[1]])
+        globcnf.append([-D, edg[2]])
+        globcnf.append([-D, -edg[3]])
+        globcnf.append([edg[0], -edg[1], -edg[2], edg[3], D])
         
         # -1, 2, -3, 4
-        g.add_clause([-E, -edg[0]])
-        g.add_clause([-E, edg[1]])
-        g.add_clause([-E, -edg[2]])
-        g.add_clause([-E, edg[3]])
-        g.add_clause([edg[0], -edg[1], edg[2], -edg[3], E])
+        globcnf.append([-E, -edg[0]])
+        globcnf.append([-E, edg[1]])
+        globcnf.append([-E, -edg[2]])
+        globcnf.append([-E, edg[3]])
+        globcnf.append([edg[0], -edg[1], edg[2], -edg[3], E])
         
         # -1, -2, 3, 4
-        g.add_clause([-F, -edg[0]])
-        g.add_clause([-F, -edg[1]])
-        g.add_clause([-F, edg[2]])
-        g.add_clause([-F, edg[3]])
-        g.add_clause([edg[0], edg[1], -edg[2], -edg[3], F])
+        globcnf.append([-F, -edg[0]])
+        globcnf.append([-F, -edg[1]])
+        globcnf.append([-F, edg[2]])
+        globcnf.append([-F, edg[3]])
+        globcnf.append([edg[0], edg[1], -edg[2], -edg[3], F])
         
         # -1, -2, -3, -4
-        g.add_clause([-G, -edg[0]])
-        g.add_clause([-G, -edg[1]])
-        g.add_clause([-G, -edg[2]])
-        g.add_clause([-G, -edg[3]])
-        g.add_clause([edg[0], edg[1], edg[2], edg[3], G])
+        globcnf.append([-G, -edg[0]])
+        globcnf.append([-G, -edg[1]])
+        globcnf.append([-G, -edg[2]])
+        globcnf.append([-G, -edg[3]])
+        globcnf.append([edg[0], edg[1], edg[2], edg[3], G])
         
         # final conjuction
         cnf = CardEnc.equals(lits=clauses, bound=1, encoding=1)
         for clause in cnf.clauses:
-            g.add_clause(clause)      
+            globcnf.append(clause)      
                
   # cell clauses
   for i in range(1, 2 * n + 1, 2):
@@ -997,10 +1001,17 @@ def calculatesolution():
       cnf = CardEnc.equals(lits=edgeindexes, bound=v[i][j], encoding=1)
       
       for clause in cnf.clauses:
-        g.add_clause(clause)
+        globcnf.append(clause)
   
-  print(f"Vars:\n{g.nof_vars()}\nClauses:\n{g.nof_clauses()}")
+  #print(f"Vars:\n{g.nof_vars()}\nClauses:\n{g.nof_clauses()}")
         
+  globcnf.to_file("test.cnf")      
+
+  with Glucose42(bootstrap_with=globcnf, with_proof=True) as temp:
+    print(temp.solve())
+    print(temp.get_proof())
+  
+  '''
   if g.solve():
     model = g.get_model()
     print(f"Solution? {model}")
@@ -1008,6 +1019,7 @@ def calculatesolution():
     print("No solution :'(")
     #nosol = True
     return
+  '''
 
 def genboard(newn:int, newm:int):
   global n
