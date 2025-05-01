@@ -9,6 +9,7 @@ import time
 from pysat.solvers import Glucose42
 from pysat.card import CardEnc
 from pysat.formula import CNF
+from itertools import combinations
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -799,31 +800,186 @@ def calculatesolution():
   for i in range(0, 2 * n + 1, 2):
     for j in range(0, 2 * m + 1, 2):
       actedges = 0
-      edgeindexes = []
+      edg = []
       if(valid(i, j-1)):
-        edgeindexes.append(cordtoindex[(i,j-1)])
+        edg.append(cordtoindex[(i,j-1)])
         actedges += 1
       if(valid(i,j+1)):
-        edgeindexes.append(cordtoindex[(i,j+1)])
+        edg.append(cordtoindex[(i,j+1)])
         actedges += 1
       if(valid(i+1, j)):
-        edgeindexes.append(cordtoindex[(i+1,j)])
+        edg.append(cordtoindex[(i+1,j)])
         actedges += 1
       if(valid(i-1, j)):
-        edgeindexes.append(cordtoindex[(i-1,j)])
+        edg.append(cordtoindex[(i-1,j)])
         actedges += 1
-      #print(f"For point at i={i},j={j}, edges around it are:{edgeindexes}")
+      #print(f"For point at i={i},j={j}, edges around it are:{edg}")
       
-      cnf = CardEnc.equals(lits=edgeindexes, bound=2, encoding=1) # handling the exactly 2 edges clause
+      # alright, so I have seven clauses, one of which must be true
+      # which means I need to declare them all in the same add_clause
+      # those seven clauses are:
+      # all possible 2-way combinations of edges, plus the negative case
+      # so basically i'd have
+      '''
+      add_clause():
+        edg[0], edg[1], -edg[2], -edg[3] OR
+        .
+        .
+        .
+        -edg[0], -edg[1], -edg[2], -edg[3]
+        
+      illetve kevesebb kisebb esetekben
+      '''
       if(actedges == 2):
-        cnf.append([-edgeindexes[0], -edgeindexes[1]])
+        # 2 cases : both or nothing
+        A = counter; counter += 1 # 1,2
+        B = counter; counter += 1 # none
+        
+        clauses = [A, B]
+        
+        # 1, 2
+        g.add_clause([-A, edg[0]])
+        g.add_clause([-A, edg[1]])
+        g.add_clause([-edg[0], -edg[1], A])
+        
+        # -1, -2
+        g.add_clause([-A, -edg[0]])
+        g.add_clause([-A, -edg[1]])
+        g.add_clause([edg[0], edg[1], A])
+        g.add_clause([A, B])
+        
+        cnf = CardEnc.equals(lits=clauses, bound=1, encoding=1)
+        for clause in cnf.clauses:
+            g.add_clause(clause)
       elif(actedges == 3):
-        cnf.append([-edgeindexes[0], -edgeindexes[1], -edgeindexes[2]])
+        # 4 cases : 3 combinations (1,2), (1,3), (2,3) plus null
+        
+        A = counter; counter += 1 # (1,2)
+        B = counter; counter += 1 # (1,3)
+        C = counter; counter += 1 # (2,3)
+        D = counter; counter += 1 # (none)
+        
+        clauses = [A, B, C, D]
+        
+        # 1, 2, -3
+        g.add_clause([-A, edg[0]])
+        g.add_clause([-A, edg[1]])
+        g.add_clause([-A, -edg[2]])
+        g.add_clause([-edg[0], -edg[1], edg[2], A])
+        # so now A is only true if all four are true
+        # add negations as needed, but this template works
+        
+        # 1, -2, 3,
+        g.add_clause([-B, edg[0]])
+        g.add_clause([-B, -edg[1]])
+        g.add_clause([-B, edg[2]])
+        g.add_clause([-edg[0], edg[1], -edg[2], B])
+        
+        # -1, 2, 3
+        g.add_clause([-C, -edg[0]])
+        g.add_clause([-C, edg[1]])
+        g.add_clause([-C, edg[2]])
+        g.add_clause([edg[0], -edg[1], -edg[2], C])
+        
+        # -1, -2, -3
+        g.add_clause([-D, -edg[0]])
+        g.add_clause([-D, -edg[1]])
+        g.add_clause([-D, -edg[2]])
+        g.add_clause([edg[0], edg[1], edg[2], D])
+        
+        cnf = CardEnc.equals(lits=clauses, bound=1, encoding=1)
+        for clause in cnf.clauses:
+            g.add_clause(clause)
       elif(actedges == 4):
-        cnf.append([-edgeindexes[0], -edgeindexes[1], -edgeindexes[2], -edgeindexes[3]])
-      
-      for clause in cnf.clauses:
-        g.add_clause(clause)
+        # 7 cases: 6 combinations, 1 null
+        A = counter; counter += 1 # (1,2)
+        B = counter; counter += 1 # (1,3)
+        C = counter; counter += 1 # (1,4)
+        D = counter; counter += 1 # (2,3)
+        E = counter; counter += 1 # (2,4)
+        F = counter; counter += 1 # (3,4)
+        G = counter; counter += 1 # (none)
+        
+        clauses = [A, B, C, D, E, F, G]
+        
+        # so for each of these 
+        # I'll have to do
+        '''
+          CNF Encoding for A = X ∧ Y ∧ Z ∧ V:
+
+          To represent this in CNF, we break it into implications:
+          1. If A is true, then all of X, Y, Z, V must be true:
+
+          A → X → ¬A ∨ X
+
+          A → Y → ¬A ∨ Y
+
+          A → Z → ¬A ∨ Z
+
+          A → V → ¬A ∨ V
+
+          2. If all of X, Y, Z, V are true, then A must be true:
+
+          (X ∧ Y ∧ Z ∧ V) → A → ¬X ∨ ¬Y ∨ ¬Z ∨ ¬V ∨ A
+        '''
+        # how fun
+        # let's get to it, I suppose
+        
+        # 1, 2, -3, -4
+        g.add_clause([-A, edg[0]])
+        g.add_clause([-A, edg[1]])
+        g.add_clause([-A, -edg[2]])
+        g.add_clause([-A, -edg[3]])
+        g.add_clause([-edg[0], -edg[1], edg[2], edg[3], A])
+        # so now A is only true if all four are true
+        # add negations as needed, but this template works
+        
+        # 1, -2, 3, -4
+        g.add_clause([-B, edg[0]])
+        g.add_clause([-B, -edg[1]])
+        g.add_clause([-B, edg[2]])
+        g.add_clause([-B, -edg[3]])
+        g.add_clause([-edg[0], edg[1], -edg[2], edg[3], B])
+        
+        # 1, -2, -3, 4
+        g.add_clause([-C, edg[0]])
+        g.add_clause([-C, -edg[1]])
+        g.add_clause([-C, -edg[2]])
+        g.add_clause([-C, edg[3]])
+        g.add_clause([-edg[0], edg[1], edg[2], -edg[3], C])
+        
+        # -1, 2, 3, -4
+        g.add_clause([-D, -edg[0]])
+        g.add_clause([-D, edg[1]])
+        g.add_clause([-D, edg[2]])
+        g.add_clause([-D, -edg[3]])
+        g.add_clause([edg[0], -edg[1], -edg[2], edg[3], D])
+        
+        # -1, 2, -3, 4
+        g.add_clause([-E, -edg[0]])
+        g.add_clause([-E, edg[1]])
+        g.add_clause([-E, -edg[2]])
+        g.add_clause([-E, edg[3]])
+        g.add_clause([edg[0], -edg[1], edg[2], -edg[3], E])
+        
+        # -1, -2, 3, 4
+        g.add_clause([-F, -edg[0]])
+        g.add_clause([-F, -edg[1]])
+        g.add_clause([-F, edg[2]])
+        g.add_clause([-F, edg[3]])
+        g.add_clause([edg[0], edg[1], -edg[2], -edg[3], F])
+        
+        # -1, -2, -3, -4
+        g.add_clause([-G, -edg[0]])
+        g.add_clause([-G, -edg[1]])
+        g.add_clause([-G, -edg[2]])
+        g.add_clause([-G, -edg[3]])
+        g.add_clause([edg[0], edg[1], edg[2], edg[3], G])
+        
+        # final conjuction
+        cnf = CardEnc.equals(lits=clauses, bound=1, encoding=1)
+        for clause in cnf.clauses:
+            g.add_clause(clause)      
                
   # cell clauses
   for i in range(1, 2 * n + 1, 2):
@@ -850,7 +1006,6 @@ def calculatesolution():
     print("No solution :'(")
     #nosol = True
     return
-      
 
 def genboard(newn:int, newm:int):
   global n
