@@ -13,6 +13,7 @@ from pysat.formula import CNF
 from itertools import combinations
 import logging
 import pysat
+from pysat.formula import IDPool
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -800,6 +801,8 @@ def calculatesolution():
   
   globcnf = CNF()
   
+  vpool = IDPool()
+  
   skippoint:bool = True
   skipcell:bool = False
   
@@ -809,11 +812,11 @@ def calculatesolution():
     if(i % 2 == 0):
       jstart = 1
     for j in range(jstart, 2 * m +1, 2):
-      cordtoindex[(i,j)] = counter
-      indextocord[counter] = (i,j)
-      counter += 1
+      cordtoindex[(i,j)] = vpool.id((i,j))
+      indextocord[cordtoindex[(i,j)]] = (i,j)
   
   firstnonedge:int = counter
+  print(f"First non-edge:{firstnonedge}")
   
   # point clauses
   for i in range(0, 2 * n + 1, 2):
@@ -868,7 +871,7 @@ def calculatesolution():
         globcnf.append([-B, -edg[1]])
         globcnf.append([edg[0], edg[1], B])
         
-        cnf = CardEnc.equals(lits=localclauses, bound=1, encoding=1)
+        cnf = CardEnc.equals(lits=localclauses, bound=1, encoding=1, vpool=vpool)
         for clause in cnf.clauses:
             globcnf.append(clause)
       
@@ -908,7 +911,7 @@ def calculatesolution():
         globcnf.append([-D, -edg[2]])
         globcnf.append([edg[0], edg[1], edg[2], D])
         
-        cnf = CardEnc.equals(lits=localclauses, bound=1, encoding=1)
+        cnf = CardEnc.equals(lits=localclauses, bound=1, encoding=1, vpool=vpool)
         for clause in cnf.clauses:
             globcnf.append(clause)
       
@@ -997,7 +1000,7 @@ def calculatesolution():
         globcnf.append([edg[0], edg[1], edg[2], edg[3], G])
         
         # final conjuction
-        cnf = CardEnc.equals(lits=localclauses, bound=1, encoding=1)
+        cnf = CardEnc.equals(lits=localclauses, bound=1, encoding=1, vpool=vpool)
         for clause in cnf.clauses:
             globcnf.append(clause)      
                
@@ -1015,10 +1018,12 @@ def calculatesolution():
       print(f"For cell at i={i},j={j}, edges around it are:{edgeindexes}")
       print(f"v[i][j]={v[i][j]}")
       
-      cnf = CardEnc.equals(lits=edgeindexes, bound=v[i][j], encoding=1)
+      cnf = CardEnc.equals(lits=edgeindexes, bound=v[i][j], encoding=1, vpool=vpool)
       
+      print("Adding clauses:\n")
       for clause in cnf.clauses:
         globcnf.append(clause)
+        print(clause)
   
   #print(f"Vars:\n{g.nof_vars()}\nClauses:\n{g.nof_clauses()}")
         
@@ -1035,17 +1040,14 @@ def calculatesolution():
     nosol = True
     return
   
-  for elem in model:
-    if(abs(elem) == firstnonedge):
-      break
-    
-    ci, cj = indextocord[abs(elem)]
-    
-    yes = 1
-    if(elem < 0):
-      yes = 0
-    
-    sol[ci][cj] = yes   
+  for lit in model:
+        var_id = abs(lit)
+        name = vpool.obj(var_id)
+        if name is not None:
+            value = lit > 0
+            print(f"{name} = {value}")
+            ci, cj = indextocord[var_id]
+            sol[ci][cj] = value
   
   '''
   if g.solve():
