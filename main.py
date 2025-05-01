@@ -835,7 +835,7 @@ def calculatesolution():
       if(valid(i-1, j)):
         edg.append(vpool.id((i-1,j)))
         actedges += 1
-      print(f"For point at i={i},j={j}, edges around it are:{edg}")
+      #print(f"For point at i={i},j={j}, edges around it are:{edg}")
       
       # alright, so I have seven clauses, one of which must be true
       # which means I need to declare them all in the same add_clause
@@ -1013,26 +1013,27 @@ def calculatesolution():
       edgeindexes.append(cordtoindex[(i-1,j)])
       edgeindexes.append(cordtoindex[(i+1,j)])
       
-      print(f"For cell at i={i},j={j}, edges around it are:{edgeindexes}")
-      print(f"v[i][j]={v[i][j]}")
+      #print(f"For cell at i={i},j={j}, edges around it are:{edgeindexes}")
+      #print(f"v[i][j]={v[i][j]}")
       
       cnf = CardEnc.equals(lits=edgeindexes, bound=v[i][j], encoding=1, vpool=vpool)
       
-      print("Adding clauses:\n")
+      #print("Adding clauses:\n")
       for clause in cnf.clauses:
         globcnf.append(clause)
-        print(clause)
+        #print(clause)
   
   #print(f"Vars:\n{g.nof_vars()}\nClauses:\n{g.nof_clauses()}")
         
   globcnf.to_file("test.cnf")      
 
   with Glucose42(bootstrap_with=globcnf, with_proof=True) as temp:
-    print(temp.solve())
-    print(temp.get_proof())
+    temp.solve()
+    #print(temp.solve())
+    #print(temp.get_proof())
     model = temp.get_model()
   
-  print(model)
+  #print(model)
   
   if(model == None):
     nosol = True
