@@ -803,7 +803,7 @@ def calculatesolution():
   
   vpool = IDPool()
   
-  skippoint:bool = True
+  skippoint:bool = False
   skipcell:bool = False
   
   # standard edge bejaras
@@ -814,9 +814,7 @@ def calculatesolution():
     for j in range(jstart, 2 * m +1, 2):
       cordtoindex[(i,j)] = vpool.id((i,j))
       indextocord[cordtoindex[(i,j)]] = (i,j)
-  
-  firstnonedge:int = counter
-  print(f"First non-edge:{firstnonedge}")
+      print(f"edge[{i}][{j}]={cordtoindex[(i,j)]}")
   
   # point clauses
   for i in range(0, 2 * n + 1, 2):
@@ -826,16 +824,16 @@ def calculatesolution():
       actedges = 0
       edg = []
       if(valid(i, j-1)):
-        edg.append(cordtoindex[(i,j-1)])
+        edg.append(vpool.id((i,j-1)))
         actedges += 1
       if(valid(i,j+1)):
-        edg.append(cordtoindex[(i,j+1)])
+        edg.append(vpool.id((i,j+1)))
         actedges += 1
       if(valid(i+1, j)):
-        edg.append(cordtoindex[(i+1,j)])
+        edg.append(vpool.id((i+1,j)))
         actedges += 1
       if(valid(i-1, j)):
-        edg.append(cordtoindex[(i-1,j)])
+        edg.append(vpool.id((i-1,j)))
         actedges += 1
       print(f"For point at i={i},j={j}, edges around it are:{edg}")
       
@@ -856,8 +854,8 @@ def calculatesolution():
       '''
       if(actedges == 2):
         # 2 cases : both or nothing
-        A = counter; counter += 1 # 1,2
-        B = counter; counter += 1 # none
+        A = vpool.id(counter); counter += 1 # 1,2
+        B = vpool.id(counter); counter += 1 # none
         
         localclauses = [A, B]
         
@@ -878,10 +876,10 @@ def calculatesolution():
       elif(actedges == 3):
         # 4 cases : 3 combinations (1,2), (1,3), (2,3) plus null
         
-        A = counter; counter += 1 # (1,2)
-        B = counter; counter += 1 # (1,3)
-        C = counter; counter += 1 # (2,3)
-        D = counter; counter += 1 # (none)
+        A = vpool.id(counter); counter += 1 # (1,2)
+        B = vpool.id(counter); counter += 1 # (1,3)
+        C = vpool.id(counter); counter += 1 # (2,3)
+        D = vpool.id(counter); counter += 1 # (none)
         
         localclauses = [A, B, C, D]
         
@@ -917,13 +915,13 @@ def calculatesolution():
       
       elif(actedges == 4):
         # 7 cases: 6 combinations, 1 null
-        A = counter; counter += 1 # (1,2)
-        B = counter; counter += 1 # (1,3)
-        C = counter; counter += 1 # (1,4)
-        D = counter; counter += 1 # (2,3)
-        E = counter; counter += 1 # (2,4)
-        F = counter; counter += 1 # (3,4)
-        G = counter; counter += 1 # (none)
+        A = vpool.id(counter); counter += 1 # (1,2)
+        B = vpool.id(counter); counter += 1 # (1,3)
+        C = vpool.id(counter); counter += 1 # (1,4)
+        D = vpool.id(counter); counter += 1 # (2,3)
+        E = vpool.id(counter); counter += 1 # (2,4)
+        F = vpool.id(counter); counter += 1 # (3,4)
+        G = vpool.id(counter); counter += 1 # (none)
         
         localclauses = [A, B, C, D, E, F, G]
         
@@ -1045,9 +1043,10 @@ def calculatesolution():
         name = vpool.obj(var_id)
         if name is not None:
             value = lit > 0
-            print(f"{name} = {value}")
-            ci, cj = indextocord[var_id]
-            sol[ci][cj] = value
+            #print(f"{name} = {value}")
+            if var_id in indextocord:
+              ci, cj = indextocord[var_id]
+              sol[ci][cj] = value
   
   '''
   if g.solve():
