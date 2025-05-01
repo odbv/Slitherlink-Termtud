@@ -813,7 +813,7 @@ def calculatesolution():
       if(valid(i-1, j)):
         edg.append(cordtoindex[(i-1,j)])
         actedges += 1
-      #print(f"For point at i={i},j={j}, edges around it are:{edg}")
+      print(f"For point at i={i},j={j}, edges around it are:{edg}")
       
       # alright, so I have seven clauses, one of which must be true
       # which means I need to declare them all in the same add_clause
@@ -851,6 +851,7 @@ def calculatesolution():
         cnf = CardEnc.equals(lits=clauses, bound=1, encoding=1)
         for clause in cnf.clauses:
             g.add_clause(clause)
+      
       elif(actedges == 3):
         # 4 cases : 3 combinations (1,2), (1,3), (2,3) plus null
         
@@ -890,6 +891,7 @@ def calculatesolution():
         cnf = CardEnc.equals(lits=clauses, bound=1, encoding=1)
         for clause in cnf.clauses:
             g.add_clause(clause)
+      
       elif(actedges == 4):
         # 7 cases: 6 combinations, 1 null
         A = counter; counter += 1 # (1,2)
@@ -931,8 +933,6 @@ def calculatesolution():
         g.add_clause([-A, -edg[2]])
         g.add_clause([-A, -edg[3]])
         g.add_clause([-edg[0], -edg[1], edg[2], edg[3], A])
-        # so now A is only true if all four are true
-        # add negations as needed, but this template works
         
         # 1, -2, 3, -4
         g.add_clause([-B, edg[0]])
@@ -992,12 +992,14 @@ def calculatesolution():
       edgeindexes.append(cordtoindex[(i-1,j)])
       edgeindexes.append(cordtoindex[(i+1,j)])
       
-      #print(f"For cell at i={i},j={j}, edges around it are:{edgeindexes}")
+      print(f"For cell at i={i},j={j}, edges around it are:{edgeindexes}")
       
       cnf = CardEnc.equals(lits=edgeindexes, bound=v[i][j], encoding=1)
       
       for clause in cnf.clauses:
         g.add_clause(clause)
+  
+  print(f"Vars:\n{g.nof_vars()}\nClauses:\n{g.nof_clauses()}")
         
   if g.solve():
     model = g.get_model()
