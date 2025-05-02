@@ -335,7 +335,8 @@ def initwindow():
             if(sol[i][j] == 1):
               pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)
             else:
-              pg.draw.rect(screen, inactiveedgecolor, lines[i][j], width=0)
+              solinactivecolor = (49, 173, 83)
+              pg.draw.rect(screen, solinactivecolor, lines[i][j], width=0)
             continue
     
           pg.draw.rect(screen, inactiveedgecolor, lines[i][j], width=0)
@@ -814,7 +815,7 @@ def calculatesolution():
     for j in range(jstart, 2 * m +1, 2):
       cordtoindex[(i,j)] = vpool.id((i,j))
       indextocord[cordtoindex[(i,j)]] = (i,j)
-      print(f"edge[{i}][{j}]={cordtoindex[(i,j)]}")
+      #print(f"edge[{i}][{j}]={cordtoindex[(i,j)]}")
   
   # point clauses
   for i in range(0, 2 * n + 1, 2):
@@ -1027,27 +1028,116 @@ def calculatesolution():
         
   globcnf.to_file("test.cnf")      
 
-  with Glucose42(bootstrap_with=globcnf, with_proof=True) as temp:
-    temp.solve()
-    #print(temp.solve())
-    #print(temp.get_proof())
+  exhausted:bool = False
+
+  temp = Glucose42()
+
+  for clause in globcnf:
+    temp.add_clause(clause)
+
+  totalsolcounter:int = 1
+
+  while(exhausted == False):
+    
+    print(f"Current solution:{totalsolcounter}")
+    
+    solvstat:bool = temp.solve()
+    
+    if(solvstat == False):
+      exhausted = True
+      nosol = True
+      return
+      
     model = temp.get_model()
-  
+
+    for lit in model:
+      var_id = abs(lit)
+      name = vpool.obj(var_id)
+      if name is not None:
+          value = lit > 0
+          #print(f"{name} = {value}")
+          if var_id in indextocord:
+            ci, cj = indextocord[var_id]
+            sol[ci][cj] = value
+    
+    ground = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+    vis = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+    
+    # building ground
+    for i in range(0, 2 * n + 1, 2):
+      for j in range(0, 2 * m + 1, 2):
+        actedges = 0
+        if(valid(i, j-1)):
+          actedges += sol[i][j-1]
+          ground[i][j-1] = sol[i][j-1]
+        if(valid(i,j+1)):
+          actedges += sol[i][j+1]
+          ground[i][j+1] = sol[i][j+1]
+        if(valid(i+1, j)):
+          actedges += sol[i+1][j]
+          ground[i+1][j] = sol[i+1][j]
+        if(valid(i-1, j)):
+          actedges += sol[i-1][j]
+          ground[i-1][j] = sol[i-1][j]
+        
+        if(actedges == 0):
+          ground[i][j] = 0;
+        if(actedges == 2):
+          ground[i][j] = 1
+        
+    #flood test
+    
+    # at each active cell, we start a BFS
+    # and afterwards, negate the loop
+    # we also keep a counter
+    # if, at the end, there was only one loop
+    # we return the solution
+    # otherwise, the loop continues
+    
+    q = deque()
+    loopcounter:int = 0
+    for i in range(0, 2 * n + 1, 1):
+      for j in range(0, 2 * m + 1, 1):
+        if(ground[i][j] == 1 and vis[i][j] == 0):
+          vis[i][j] = 1
+          q.append((i,j))
+          loopcounter += 1
+          containededges = []
+          while(len(q) > 0):
+            #print(f"Len(q)={len(q)}")
+            i, j = q.popleft()
+            if(sol[i][j] == 1):
+              containededges.append(cordtoindex[(i,j)])
+            #print(f"ci={i}, cj={j}")
+            
+            if(valid(i, j-1) and ground[i][j-1] == 1 and vis[i][j-1] == 0):
+              vis[i][j-1] = 1
+              q.append((i, j-1))
+              
+            if(valid(i,j+1) and ground[i][j+1] == 1 and vis[i][j+1] == 0):
+              vis[i][j+1] = 1
+              q.append((i, j+1))
+            
+            if(valid(i+1, j) and ground[i+1][j] == 1 and vis[i+1][j] == 0):
+              vis[i+1][j] = 1
+              q.append((i+1, j))
+            
+            if(valid(i-1, j) and ground[i-1][j] == 1 and vis[i-1][j] == 0):
+              vis[i-1][j] = 1
+              q.append((i-1, j))
+          
+          neg_clause = [-lit for lit in containededges]
+          #globcnf.append(neg_clause)
+          temp.add_clause(neg_clause)
+    
+    if(loopcounter == 1):
+      return
+    else:
+      totalsolcounter += 1
+      print(f"{loopcounter} loops found, retrying")
+      #return
+    
   #print(model)
-  
-  if(model == None):
-    nosol = True
-    return
-  
-  for lit in model:
-        var_id = abs(lit)
-        name = vpool.obj(var_id)
-        if name is not None:
-            value = lit > 0
-            #print(f"{name} = {value}")
-            if var_id in indextocord:
-              ci, cj = indextocord[var_id]
-              sol[ci][cj] = value
   
   '''
   if g.solve():
