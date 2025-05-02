@@ -312,8 +312,6 @@ def initwindow():
       #if(mousepress):
         #print(f"Mouse click at {mousecords}")
       
-      inactiveedgecolor = (159, 214, 173)
-      
       if(showsol):
         if(solcalc == False or testing == True):
           solcalc = True
@@ -331,15 +329,17 @@ def initwindow():
           jstart = 1
         for j in range(jstart, 2 * m +1, 2):
           
+          solinactivecolor = (49, 173, 83)
+          inactiveedgecolor = (159, 214, 173)
+          
           if(showsol):
             if(sol[i][j] == 1):
               pg.draw.rect(screen, (0,0,0), lines[i][j], width=0)
             else:
-              solinactivecolor = (49, 173, 83)
-              pg.draw.rect(screen, solinactivecolor, lines[i][j], width=0)
+              pg.draw.rect(screen, boardbackgroundcolor, lines[i][j], width=0)
             continue
     
-          pg.draw.rect(screen, inactiveedgecolor, lines[i][j], width=0)
+          pg.draw.rect(screen, solinactivecolor, lines[i][j], width=0)
           
           if(mousepress):
             if(lines[i][j].collidepoint(mousecords)):
