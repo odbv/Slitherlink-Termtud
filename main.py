@@ -7,13 +7,11 @@ import os
 from collections import deque
 import time
 from pysat.solvers import Glucose42
-from pysat.solvers import Cadical153
 from pysat.card import CardEnc
 from pysat.formula import CNF
-from itertools import combinations
-import logging
-import pysat
 from pysat.formula import IDPool
+import random
+import math
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -24,7 +22,7 @@ from pysat.formula import IDPool
 # de aztan van egy opcio, hogy valasszon egy uj randomat
 # vagy hogy az ember beadja a sajatjat
 
-startingfile:str = "testing_2x2.txt"
+startingfile:str = "example_5x5.txt"
 
 testing:bool = True
 nosol:bool = False
@@ -638,8 +636,8 @@ def getboard(startup:bool, source):
             sol[i][j] = next(parts)
           
     printnumbers(v, n, m)
-    if(solcalc):
-      printtotal(sol, n, m)
+    #if(solcalc):
+    #   printtotal(sol, n, m)
 
 def newgame_pregen(winx, winy):
   root = tk.Tk()
@@ -1131,6 +1129,7 @@ def calculatesolution():
           temp.add_clause(neg_clause)
     
     if(loopcounter == 1):
+      printtotal(sol, n, m)
       return
     else:
       totalsolcounter += 1
@@ -1163,6 +1162,184 @@ def genboard(newn:int, newm:int):
   
   v = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
   sol = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+  
+  # valahogy ez még nehezebbnek tűnik, mint a solver
+  # mert ott ugye, szigoruan meg van hatarozva, hogy mi a helyes megoldas
+  # itt viszont erzesre megy
+  # es az a problema, hogy annak ellenere, hogy mar vagy 40 oraja programozom ezt
+  # egy csoppet sem lettem jobb magaban a slitherlink jatekban
+  
+  # na jo
+  # tehat alap otlet:
+  # valasztunk egy cellat valahol kozeptajt
+  # olyan ~ 35%-tol 65%-ig
+  # es onnan egy flood fill, felturbozva egy kicsi randomsaggal/heurisztikaval?
+  # es akkor a szinezes hatara menten beallitjuk a korvanalt/szamokat, aztan kitorolunk valamennyit
+  # a szamok ~70%-at?
+  
+  # nem tartom olyan fontosnak, hogy az elkeszult puzzle-nek szigorúan egy helyes megoldása legyen
+  # ami megkönnyíti az életemet 
+  
+  flood = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+  dist = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+  dec = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8) # decided
+  # we only care for 1 + 2*k, 1 + 2*l cells
+  # the ones which contain numbers
+  
+  ri:int = random.randint(math.floor(0.35 * n), math.ceil(0.65 * n)) - 1
+  rj:int = random.randint(math.floor(0.35 * m), math.ceil(0.65 * m)) - 1
+  
+  print(f"ri={ri}, rj={rj}")
+  
+  starti = 1 + 2 * ri
+  startj = 1 + 2 * rj
+  q = deque()
+  q.append((starti, startj))
+  dist[starti][startj] = 0
+
+  #print(f"Starting queue:{q}")
+  
+  while(len(q) > 0):
+    #print(f"Len(q)={len(q)}")
+    i, j = q.popleft()
+    #print(f"ci={i}, cj={j}")
+    
+    # here, we are not yet AT (i, j)
+    # we are now 'considering' whether to color it or not
+    
+    # pitfalls: opposites, and y shapes
+    '''
+    
+       []
+    [h]
+    [ ]
+    
+    (h is for "here")
+    (and you can rotate this around to get all problematic configurations)
+    
+    there are 8 cases of this
+    2 for each in (i, j-1), (i, j+1), (i+1, j), (i-1, j)
+    
+    '''
+    
+    badpos:bool = False
+    
+    # horizontal
+    if(valid(i, j-2) and valid(i, j+2)):
+      if(flood[i][j-2] == 1 and flood[i][j+2] == 1):
+        badpos = True
+    
+    # vertical
+    if(valid(i+2, j) and valid(i-2, j)):
+      if(flood[i+2][j] == 1 and flood[i-2][j] == 1):
+        badpos = True
+    
+    # left to right corners
+    if(valid(i, j-2)):
+      if(valid(i-1, j+2)):
+        if(flood[i][j-2] == 1 and flood[i-1][j+2] == 1):
+          badpos = True
+      if(valid(i+1, j+2)):
+        if(flood[i][j-2] == 1 and flood[i+1][j+2] == 1):
+          badpos = True
+          
+    # right to left corners
+    if(valid(i, j+2)):
+      if(valid(i-2, j-2)):
+        if(flood[i][j+2] == 1 and flood[i-2][j-2] == 1):
+          badpos = True
+      if(valid(i+2, j-2)):
+        if(flood[i][j+2] == 1 and flood[i+2][j-2] == 1):
+          badpos = True
+    
+    # up to down corners
+    if(valid(i-2, j)):
+      if(valid(i+2, j+2)):
+        if(flood[i-2][j] == 1 and flood[i+2][j+2] == 1):
+          badpos = True
+      if(valid(i+2, j-2)):
+        if(flood[i-2][j] == 1 and flood[i+2][j-2] == 1):
+          badpos = True
+    
+    # down to up corners
+    if(valid(i+2, j)):
+      if(valid(i-2, j+2)):
+        if(flood[i+2][j] == 1 and flood[i-2][j+2] == 1):
+          badpos = True
+      if(valid(i-2, j-2)):
+        if(flood[i+2][j] == 1 and flood[i-2][j-2] == 1):
+          badpos = True
+        
+    randskip = random.randint(1, 3)
+    if i == starti and j == startj:
+      randskip = 0
+    
+    if(badpos or randskip == 1):
+      continue
+    else:
+      flood[i][j] = 1
+    
+    if(valid(i, j-2) and dec[i][j-2] == 0):
+      dec[i][j-2] = 1
+      dist[i][j-2] = dist[i][j] + 1
+      q.append((i, j-2))
+      
+    if(valid(i,j+2) and dec[i][j+2] == 0):
+      dec[i][j+2] = 1
+      dist[i][j+2] = dist[i][j] + 1
+      q.append((i, j+2))
+    
+    if(valid(i+2, j) and dec[i+2][j] == 0):
+      dec[i+2][j] = 1
+      dist[i+2][j] = dist[i][j] + 1
+      q.append((i+2, j))
+    
+    if(valid(i-2, j) and dec[i-2][j] == 0):
+      dec[i-2][j] = 1
+      dist[i-2][j] = dist[i][j] + 1
+      q.append((i-2, j))
+
+  print("Flood res:")
+  printnumbers(flood, n, m)
+
+  for i in range(1, 2 * n + 1, 2):
+    for j in range(1, 2 * m + 1, 2):
+      # get v values
+      curr = 0
+      if(valid(i-2, j)):
+        if(flood[i-2][j] != flood[i][j]):
+          curr += 1
+          sol[i-1][j] = 1
+      elif(flood[i][j] == 1):
+        sol[i-1][j] = 1
+        curr += 1
+      
+      if(valid(i+2, j)):
+        if(flood[i+2][j] != flood[i][j]):
+          curr += 1
+          sol[i+1][j] = 1
+      elif(flood[i][j] == 1):
+        sol[i+1][j] = 1
+        curr += 1
+      
+      if(valid(i, j+2)):
+        if(flood[i][j+2] != flood[i][j]):
+          curr += 1
+          sol[i][j+1] = 1
+      elif(flood[i][j] == 1):
+        sol[i][j-1] = 1
+        curr += 1
+        
+      if(valid(i, j-2)):
+        if(flood[i][j-2] != flood[i][j]):
+          curr += 1
+          sol[i][j-1] = 1    
+      elif(flood[i][j] == 1):
+        sol[i][j-1] = 1
+        curr += 1
+      
+      v[i][j] = curr
+      sol[i][j] = v[i][j]
 
 if __name__ == "__main__":
     main()
