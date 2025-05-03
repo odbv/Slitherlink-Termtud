@@ -545,7 +545,7 @@ def initboards():
     #text_files = [f for f in os.listdir(pregenboardspath) if f.endswith('.txt')]
     
 def printtotal(arr, n, m):
-    print("\nfull=\n")
+    #print("full=\n")
     for i in range(0, 2 * n + 1, 1):
         for j in range(0, 2 * m + 1, 1):
           curr = arr[i][j]
@@ -569,7 +569,7 @@ def printtotal(arr, n, m):
         print(" ")
 
 def printnumbers(arr, n, m):
-  print("\nnumbers=\n")
+  #print("numbers=")
   for i in range(1, 2 * n + 1, 2):
       for j in range(1, 2 * m + 1, 2):
           curr = arr[i][j]
@@ -1180,125 +1180,238 @@ def genboard(newn:int, newm:int):
   # nem tartom olyan fontosnak, hogy az elkeszult puzzle-nek szigorúan egy helyes megoldása legyen
   # ami megkönnyíti az életemet 
   
-  flood = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
-  dist = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
-  dec = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8) # decided
-  # we only care for 1 + 2*k, 1 + 2*l cells
-  # the ones which contain numbers
+  # oke, az nem jott be
+  # masodik nekifutas:
+  # https://liamappelbe.medium.com/how-to-generate-slither-link-puzzles-6c65510b2ba1
+  # rajzolunk egy beszinezett teglalapot ugy kozeptajt
+  # es igyekszunk a "wigglyness-t" novelni minden lepesben
   
-  ri:int = random.randint(math.floor(0.35 * n), math.ceil(0.65 * n)) - 1
-  rj:int = random.randint(math.floor(0.35 * m), math.ceil(0.65 * m)) - 1
+  flood = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+  
+  ri:int = max(math.ceil(n/4) - 1, 1)
+  rj:int = max(math.ceil(m/4) - 1, 1)
   
   print(f"ri={ri}, rj={rj}")
   
+  leni:int = math.floor(n/2) - 1
+  lenj:int = math.ceil(m/2) - 1
+  
   starti = 1 + 2 * ri
   startj = 1 + 2 * rj
-  q = deque()
-  q.append((starti, startj))
-  dist[starti][startj] = 0
+  
+  q = []
 
   #print(f"Starting queue:{q}")
   
+  for i in range(starti, starti + 2 * leni + 1, 2):
+    for j in range(startj, startj + 2 * lenj + 1, 2):
+      flood[i][j] = 1
+      
+  # hozzadjuk a szin kozotti tereket a queue-hoz
+  for i in range(1, 2 * n + 1, 2):
+    for j in range(1, 2 * m + 1, 2):
+      # check neighbors, count how many are different
+      # if its larger than one, add to queue
+      curr = 0
+      if(valid(i-2, j)):
+        if(flood[i-2][j] != flood[i][j]):
+          curr += 1
+      
+      if(valid(i+2, j)):
+        if(flood[i+2][j] != flood[i][j]):
+          curr += 1
+      
+      if(valid(i, j+2)):
+        if(flood[i][j+2] != flood[i][j]):
+          curr += 1
+        
+      if(valid(i, j-2)):
+        if(flood[i][j-2] != flood[i][j]):
+          curr += 1
+      
+      if(curr > 0):
+        q.append((i, j))
+  
+  print(f"Queue before start={q}")
+  
+  print(f"Start conf:")
+  printnumbers(flood, n, m)
+  
   while(len(q) > 0):
     #print(f"Len(q)={len(q)}")
-    i, j = q.popleft()
-    #print(f"ci={i}, cj={j}")
+    index = random.randrange(len(q))
+    i, j = q.pop(index)
     
-    # here, we are not yet AT (i, j)
-    # we are now 'considering' whether to color it or not
+    out:str = ""
     
-    # pitfalls: opposites, and y shapes
-    '''
+    out += f"\ni={i}, j={j}"
+    out += f"\nactual:i={(int)((i-1)/2)},j={(int)((j-1)/2)}"
     
-       []
-    [h]
-    [ ]
+    sameo:int = 0 # same orthogonally
+    samed:int = 0
+    diffo:int = 0 # same diagonally
+    diffd:int = 0
     
-    (h is for "here")
-    (and you can rotate this around to get all problematic configurations)
+    totalo = 0
+    totald = 0
     
-    there are 8 cases of this
-    2 for each in (i, j-1), (i, j+1), (i+1, j), (i-1, j)
+    edge:bool = True
     
-    '''
-    
-    badpos:bool = False
-    
-    # horizontal
-    if(valid(i, j-2) and valid(i, j+2)):
-      if(flood[i][j-2] == 1 and flood[i][j+2] == 1):
-        badpos = True
-    
-    # vertical
-    if(valid(i+2, j) and valid(i-2, j)):
-      if(flood[i+2][j] == 1 and flood[i-2][j] == 1):
-        badpos = True
-    
-    # left to right corners
-    if(valid(i, j-2)):
-      if(valid(i-1, j+2)):
-        if(flood[i][j-2] == 1 and flood[i-1][j+2] == 1):
-          badpos = True
-      if(valid(i+1, j+2)):
-        if(flood[i][j-2] == 1 and flood[i+1][j+2] == 1):
-          badpos = True
-          
-    # right to left corners
-    if(valid(i, j+2)):
-      if(valid(i-2, j-2)):
-        if(flood[i][j+2] == 1 and flood[i-2][j-2] == 1):
-          badpos = True
-      if(valid(i+2, j-2)):
-        if(flood[i][j+2] == 1 and flood[i+2][j-2] == 1):
-          badpos = True
-    
-    # up to down corners
-    if(valid(i-2, j)):
-      if(valid(i+2, j+2)):
-        if(flood[i-2][j] == 1 and flood[i+2][j+2] == 1):
-          badpos = True
-      if(valid(i+2, j-2)):
-        if(flood[i-2][j] == 1 and flood[i+2][j-2] == 1):
-          badpos = True
-    
-    # down to up corners
-    if(valid(i+2, j)):
-      if(valid(i-2, j+2)):
-        if(flood[i+2][j] == 1 and flood[i-2][j+2] == 1):
-          badpos = True
-      if(valid(i-2, j-2)):
-        if(flood[i+2][j] == 1 and flood[i-2][j-2] == 1):
-          badpos = True
-        
-    randskip = random.randint(1, 3)
-    if i == starti and j == startj:
-      randskip = 0
-    
-    if(badpos or randskip == 1):
-      continue
-    else:
-      flood[i][j] = 1
-    
-    if(valid(i, j-2) and dec[i][j-2] == 0):
-      dec[i][j-2] = 1
-      dist[i][j-2] = dist[i][j] + 1
-      q.append((i, j-2))
+    around = [(-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1)]
+    for piece in around:
       
-    if(valid(i,j+2) and dec[i][j+2] == 0):
-      dec[i][j+2] = 1
-      dist[i][j+2] = dist[i][j] + 1
-      q.append((i, j+2))
+      hi, hj = piece
+      
+      diag:bool = True
+      if(hi == 0 or hj == 0):
+        diag = False
+      
+      hi *= 2
+      hj *= 2
+      
+      if(valid(i + hi, j + hj)):
+        if(diag):
+          totald += 1
+        else:
+          totalo += 1
+        if(flood[i + hi][j + hj] == flood[i][j]):
+          if(diag):
+            samed += 1
+          else:
+            sameo += 1
+    # . . . dög vagyok visszamenni és átírni az összes for-t ilyenre
+    # mondjuk sokkal elegánsabb lenne
     
-    if(valid(i+2, j) and dec[i+2][j] == 0):
-      dec[i+2][j] = 1
-      dist[i+2][j] = dist[i][j] + 1
-      q.append((i+2, j))
+    out += f"\nsameo={sameo}, totalo={totalo}"
+    out += f"\nsamed={samed}, totald={totald}"
     
-    if(valid(i-2, j) and dec[i-2][j] == 0):
-      dec[i-2][j] = 1
-      dist[i-2][j] = dist[i][j] + 1
-      q.append((i-2, j))
-
+    if(totalo == 4):
+      edge = False
+    
+    diffd = totald - samed
+    diffo = totalo - sameo
+    
+    wigglinescheck:bool # true? : changing this cell would make the line wigglier
+    connectivitycheck:bool # true? : changing this cell would NOT mess up interconnectedness
+    
+    out += f"\nEdge?={edge}"
+    
+    wigglinescheck = (bool)(sameo > diffo or (sameo == diffo and samed > diffd))
+    
+    '''    
+    if(totalo == 2):
+      #wigglinescheck = (bool)(sameo > diffo or (sameo == diffo and samed > diffd))
+      if(sameo == 1): wigglinescheck = True; 
+      else: wigglinescheck = False
+    elif(totalo == 3):
+      if(sameo == 2): wigglinescheck = True; 
+      else: wigglinescheck = False
+    elif(totalo == 4):
+      if(sameo == 3):
+        wigglinescheck = True
+      elif(sameo == 2 and diffd == 3):
+          wigglinescheck = True
+      else:
+        wigglinescheck = False
+    '''
+     
+    # let's count flips
+    # going clockwise, starting from i-1, j-1
+    flips = 0
+    prevcol = -1
+    route = [(-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)]
+    for piece in route:
+      hi, hj = piece
+      hi *= 2
+      hj *= 2
+      hi += i
+      hj += j
+      
+      if(valid(hi, hj) == False):
+        prevcol = -1
+        continue
+      
+      if(prevcol == -1):
+        prevcol = flood[hi][hj]
+        continue
+      elif(prevcol != flood[hi][hj]):
+        flips += 1
+    
+        
+    connectivitycheck = (bool)(flips < totalo)    
+    
+    '''
+    if(edge):
+      connectivitycheck = (bool)(flips < 2 * totalo - 4)
+    else:
+      connectivitycheck = (bool)(flips < 4)
+    '''
+    '''
+    if(sameo == totalo):
+      connectivitycheck = False
+    '''
+    
+    '''
+    # okay
+    # this connectivity check is kicking my fucking ass
+    # so fuck it
+    # bruteforce, I'm going to simulate a bfs
+    vis = np.zeros((2*n+1, 2*m+1), dtype=np.int8)
+    bfs = deque()
+    loopcounter:int = 0
+    for i in range(1, 2 * n + 1, 2):
+      for j in range(1, 2 * m + 1, 2):
+        if(flood[i][j] == 1 and vis[i][j] == 0):
+          vis[i][j] = 1
+          bfs.append((i,j))
+          loopcounter += 1
+          while(len(bfs) > 0):
+            #print(f"Len(q)={len(q)}")
+            i, j = bfs.popleft()
+            
+            ortho = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+            for dir in ortho:
+              ei, ej = dir
+              ei *= 2
+              ej *= 2
+              ei += i
+              ej += j
+              
+              if(valid(ei, ej) and flood[ei][ej] == 1 and vis[ei][ej] == 0):
+                vis[ei][ej] = 1
+                q.append((ei, ej))
+    
+    if(loopcounter == 1):
+      connectivitycheck = True
+    else:
+      connectivitycheck = False
+    '''
+    
+    out += f"\nWigglinescheck={wigglinescheck}"
+    out += f"\nConnectivitycheck={connectivitycheck}"
+      
+    if(wigglinescheck and connectivitycheck):
+      flood[i][j] = 1 - flood[i][j]
+      print(out)
+      printnumbers(flood, n, m)
+      
+      # add neighbors
+      #continue
+      for piece in around:
+        hi, hj = piece
+        hi *= 2
+        hj *= 2
+        hi += i
+        hj += j
+        
+        #if(hj != 0 and hi != 0): continue
+        
+        if(valid(hi, hj) == False):
+          continue
+        
+        q.append((hi, hj))
+      
+  
   print("Flood res:")
   printnumbers(flood, n, m)
 
@@ -1327,7 +1440,7 @@ def genboard(newn:int, newm:int):
           curr += 1
           sol[i][j+1] = 1
       elif(flood[i][j] == 1):
-        sol[i][j-1] = 1
+        sol[i][j+1] = 1
         curr += 1
         
       if(valid(i, j-2)):
