@@ -1042,6 +1042,7 @@ def calculatesolution():
     solvstat:bool = temp.solve()
     
     if(solvstat == False):
+      print("No possible solution exists")
       exhausted = True
       nosol = True
       return
@@ -1131,22 +1132,13 @@ def calculatesolution():
     if(loopcounter == 1):
       printtotal(sol, n, m)
       return
+    elif(loopcounter == 0):
+      nosol = True
+      return
     else:
       totalsolcounter += 1
       print(f"{loopcounter} loops found, retrying")
       #return
-    
-  #print(model)
-  
-  '''
-  if g.solve():
-    model = g.get_model()
-    print(f"Solution? {model}")
-  else:
-    print("No solution :'(")
-    #nosol = True
-    return
-  '''
 
 def genboard(newn:int, newm:int):
   global n
@@ -1186,231 +1178,153 @@ def genboard(newn:int, newm:int):
   # rajzolunk egy beszinezett teglalapot ugy kozeptajt
   # es igyekszunk a "wigglyness-t" novelni minden lepesben
   
+  # na jo
+  # tegnap azzal elpazaroltam ot orat
+  # tehat most itt az ido, hogy megprobaljunk egyfajta cellular automata-t
+  # hogy generaljunk egy blob-ot
+  
   flood = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+  comp = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8) # grafelmelet
+  dist = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int16)
   
-  ri:int = max(math.ceil(n/4) - 1, 1)
-  rj:int = max(math.ceil(m/4) - 1, 1)
+  q = deque()
   
-  print(f"ri={ri}, rj={rj}")
-  
-  leni:int = math.floor(n/2) - 1
-  lenj:int = math.ceil(m/2) - 1
-  
-  starti = 1 + 2 * ri
-  startj = 1 + 2 * rj
-  
-  q = []
-
-  #print(f"Starting queue:{q}")
-  
-  for i in range(starti, starti + 2 * leni + 1, 2):
-    for j in range(startj, startj + 2 * lenj + 1, 2):
-      flood[i][j] = 1
-      
-  # hozzadjuk a szin kozotti tereket a queue-hoz
+  # tehat betoltjuk az egesz grid-et
+  # es kivulrol inditunk u.n. "incursion"-oket
+  # amikkel kivagunk szeleteket belole
   for i in range(1, 2 * n + 1, 2):
     for j in range(1, 2 * m + 1, 2):
-      # check neighbors, count how many are different
-      # if its larger than one, add to queue
-      curr = 0
-      if(valid(i-2, j)):
-        if(flood[i-2][j] != flood[i][j]):
-          curr += 1
-      
-      if(valid(i+2, j)):
-        if(flood[i+2][j] != flood[i][j]):
-          curr += 1
-      
-      if(valid(i, j+2)):
-        if(flood[i][j+2] != flood[i][j]):
-          curr += 1
-        
-      if(valid(i, j-2)):
-        if(flood[i][j-2] != flood[i][j]):
-          curr += 1
-      
-      if(curr > 0):
-        q.append((i, j))
+      flood[i][j] = 1 # tudom, hogy tudnek visszafele dolgozni, hogy felcserelem a 0-1 jelenteset
+      # de nem akarok
   
-  print(f"Queue before start={q}")
+  # szoval
+  # kitalaljuk elore, hogy mekkorak lesznek a beturemkedesek
+  # es mindig amikor elkezdunk egyet, akkor mar elore tuddjuk a meretet
+  # pelda egy jo elosztasra, amit a loopy-val generaltam:
+  # 10x10-es
+  # 2/3/3/3 incursion per oldal
+  # mereteik: negy 1-es, harom 2-es, egy 4-es, egy 7-es, egy 9-es, 
+  # tehat osszesen kb a felet kene lefedni
   
-  print(f"Start conf:")
-  printnumbers(flood, n, m)
-  
-  while(len(q) > 0):
-    #print(f"Len(q)={len(q)}")
-    index = random.randrange(len(q))
-    i, j = q.pop(index)
-    
-    out:str = ""
-    
-    out += f"\ni={i}, j={j}"
-    out += f"\nactual:i={(int)((i-1)/2)},j={(int)((j-1)/2)}"
-    
-    sameo:int = 0 # same orthogonally
-    samed:int = 0
-    diffo:int = 0 # same diagonally
-    diffd:int = 0
-    
-    totalo = 0
-    totald = 0
-    
-    edge:bool = True
-    
-    around = [(-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1)]
-    for piece in around:
-      
-      hi, hj = piece
-      
-      diag:bool = True
-      if(hi == 0 or hj == 0):
-        diag = False
-      
-      hi *= 2
-      hj *= 2
-      
-      if(valid(i + hi, j + hj)):
-        if(diag):
-          totald += 1
-        else:
-          totalo += 1
-        if(flood[i + hi][j + hj] == flood[i][j]):
-          if(diag):
-            samed += 1
-          else:
-            sameo += 1
-    # . . . dög vagyok visszamenni és átírni az összes for-t ilyenre
-    # mondjuk sokkal elegánsabb lenne
-    
-    out += f"\nsameo={sameo}, totalo={totalo}"
-    out += f"\nsamed={samed}, totald={totald}"
-    
-    if(totalo == 4):
-      edge = False
-    
-    diffd = totald - samed
-    diffo = totalo - sameo
-    
-    wigglinescheck:bool # true? : changing this cell would make the line wigglier
-    connectivitycheck:bool # true? : changing this cell would NOT mess up interconnectedness
-    
-    out += f"\nEdge?={edge}"
-    
-    wigglinescheck = (bool)(sameo > diffo or (sameo == diffo and samed > diffd))
-    
-    '''    
-    if(totalo == 2):
-      #wigglinescheck = (bool)(sameo > diffo or (sameo == diffo and samed > diffd))
-      if(sameo == 1): wigglinescheck = True; 
-      else: wigglinescheck = False
-    elif(totalo == 3):
-      if(sameo == 2): wigglinescheck = True; 
-      else: wigglinescheck = False
-    elif(totalo == 4):
-      if(sameo == 3):
-        wigglinescheck = True
-      elif(sameo == 2 and diffd == 3):
-          wigglinescheck = True
-      else:
-        wigglinescheck = False
-    '''
-     
-    # let's count flips
-    # going clockwise, starting from i-1, j-1
-    flips = 0
-    prevcol = -1
-    route = [(-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1), (0, -1), (-1, -1)]
-    for piece in route:
-      hi, hj = piece
-      hi *= 2
-      hj *= 2
-      hi += i
-      hj += j
-      
-      if(valid(hi, hj) == False):
-        prevcol = -1
+  compctr:int = 0
+  for i in range(1, 2 * n + 1, 2):
+    for j in range(1, 2 * m + 1, 2):
+      # skip corners
+      if((i == 1 or i == 2 * n - 1) and (j == 1 or j == 2 * m - 1)):
         continue
-      
-      if(prevcol == -1):
-        prevcol = flood[hi][hj]
-        continue
-      elif(prevcol != flood[hi][hj]):
-        flips += 1
-    
-        
-    connectivitycheck = (bool)(flips < totalo)    
-    
-    '''
-    if(edge):
-      connectivitycheck = (bool)(flips < 2 * totalo - 4)
-    else:
-      connectivitycheck = (bool)(flips < 4)
-    '''
-    '''
-    if(sameo == totalo):
-      connectivitycheck = False
-    '''
-    
-    '''
-    # okay
-    # this connectivity check is kicking my fucking ass
-    # so fuck it
-    # bruteforce, I'm going to simulate a bfs
-    vis = np.zeros((2*n+1, 2*m+1), dtype=np.int8)
-    bfs = deque()
-    loopcounter:int = 0
-    for i in range(1, 2 * n + 1, 2):
-      for j in range(1, 2 * m + 1, 2):
-        if(flood[i][j] == 1 and vis[i][j] == 0):
-          vis[i][j] = 1
-          bfs.append((i,j))
-          loopcounter += 1
-          while(len(bfs) > 0):
-            #print(f"Len(q)={len(q)}")
-            i, j = bfs.popleft()
+      if(i == 1 or i == 2 * n - 1 or j == 1 or j == 2 * m - 1): # on edge
+        chance = random.randint(1, 10)
+        if(flood[i][j] == 1 and chance <= 4):
+          print(f"At edge, i={i}, j={j}")
+          print(f"Chance={chance}, currcomp={compctr+1}")
+          compctr += 1
+          # edges: top=1, left=2, down=3, right=4, clockwise
+          # if the edge of the current cell isn't equal to its starting edge, 
+          
+          startedge = 0
+          if(i == 1):
+            startedge = 1
+          elif(j == 2 * m - 1):
+            startedge = 2
+          elif(i == 2 * n - 1):
+            startedge = 3
+          elif(j == 1):
+            startedge = 4
+          
+          print(f"startedge={startedge}")
+          
+          q = deque()
+          q.append((i, j))
+          dist[i][j] = 0
+          while(len(q) > 0):
+            danger:bool = False
             
-            ortho = [(0, -1), (0, 1), (-1, 0), (1, 0)]
+            ci, cj = q.popleft() # current-i, current-j
+            print(f"ci={ci}, cj={cj}")
+            comp[ci][cj] = compctr
+            flood[ci][cj] = 0
+            ortho = [(0, -1), (0, 1), (1, 0), (-1, 0)]
+            random.shuffle(ortho)
+            maxpos = 1 + math.floor(dist[ci][cj]/2)
+            posexp = [] # possible expansions
             for dir in ortho:
-              ei, ej = dir
-              ei *= 2
-              ej *= 2
-              ei += i
-              ej += j
               
-              if(valid(ei, ej) and flood[ei][ej] == 1 and vis[ei][ej] == 0):
-                vis[ei][ej] = 1
-                q.append((ei, ej))
-    
-    if(loopcounter == 1):
-      connectivitycheck = True
-    else:
-      connectivitycheck = False
-    '''
-    
-    out += f"\nWigglinescheck={wigglinescheck}"
-    out += f"\nConnectivitycheck={connectivitycheck}"
-      
-    if(wigglinescheck and connectivitycheck):
-      flood[i][j] = 1 - flood[i][j]
-      print(out)
-      printnumbers(flood, n, m)
-      
-      # add neighbors
-      #continue
-      for piece in around:
-        hi, hj = piece
-        hi *= 2
-        hj *= 2
-        hi += i
-        hj += j
-        
-        #if(hj != 0 and hi != 0): continue
-        
-        if(valid(hi, hj) == False):
-          continue
-        
-        q.append((hi, hj))
-      
+              hi, hj = dir # here-i, here-j
+              hi = ci + hi * 2
+              hj = cj + hj * 2
+              
+              if(valid(hi, hj) == False):
+                continue
+              
+              if(flood[hi][hj] == 0 and comp[hi][hj] != comp[ci][cj]):
+                danger = True
+                break 
+              
+              randhere = random.randint(1, maxpos)
+              maxpos += 1
+              if(randhere != 1):
+                continue
+              
+              if(flood[hi][hj] == 1):
+                posexp.append((hi, hj))
+            
+            # masodik feltetel: ha van olyan diagonalis, amelyik csak 0 de nem egy kompban van
+            # akkor is rossz
+            # modositas: ha van egy diagonalis
+            # ahol legalabb az egyik hozza tartozo cella nem nulla
+            diag = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+            for dir in diag:
+              hi, hj = dir # here-i, here-j
+              hi = ci + hi * 2
+              hj = cj + hj * 2
+              
+              if(valid(hi, hj) == False):
+                continue
+              
+              if(flood[hi][hj] == 0 and comp[hi][hj] != comp[ci][cj]):
+                danger = True
+                break
+              
+              posdang = False
+              
+              if(flood[hi][hj] == 0):
+                posdang = True
+                if(valid(hi, cj) and flood[hi][cj] == 0):
+                  posdang = False
+                if(valid(ci, hj) and flood[ci][hj] == 0):
+                  posdang = False
+                
+              if(posdang):
+                danger = True
+                          
+            # hogyha a szelen van
+            # de nem ugyanazon a szelen ahonnan kezdte
+            # az is bajos
+            
+            curredge = 0
+            if(ci == 1):
+              curredge = 1
+            elif(cj == 2 * m - 1):
+              curredge = 2
+            elif(ci == 2 * n - 1):
+              curredge = 3
+            elif(cj == 1):
+              curredge = 4
+            
+            print(f"Curredge={curredge}")
+            
+            if(curredge != 0 and curredge != startedge):
+              danger = True
+            
+            print(f"Danger?={danger}") 
+            
+            if(danger == True):
+              flood[ci][cj] = 1
+            else: 
+              for nw in posexp:
+                q.append(nw)
+                hi, hj = nw
+                dist[hi][hj] = dist[ci][cj] + 1       
   
   print("Flood res:")
   printnumbers(flood, n, m)
