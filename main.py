@@ -24,7 +24,8 @@ import math
 
 startingfile:str = "example_5x5.txt"
 
-testing:bool = True
+istestinginit:bool = True
+testing:bool = False
 nosol:bool = False
 
 n = 1 # sorok szama, i-s iterator
@@ -81,9 +82,10 @@ def initwindow():
     global sol
     global solcalc
     
+    global istestinginit
     global testing
     
-    testing = True
+    if(istestinginit): testing = True
     
     # pygame, do your magic  
     pg.init()
@@ -1024,7 +1026,7 @@ def calculatesolution():
   
   #print(f"Vars:\n{g.nof_vars()}\nClauses:\n{g.nof_clauses()}")
         
-  globcnf.to_file("test.cnf")      
+  #globcnf.to_file("test.cnf")      
 
   exhausted:bool = False
 
@@ -1132,9 +1134,6 @@ def calculatesolution():
     if(loopcounter == 1):
       printtotal(sol, n, m)
       return
-    elif(loopcounter == 0):
-      nosol = True
-      return
     else:
       totalsolcounter += 1
       print(f"{loopcounter} loops found, retrying")
@@ -1205,6 +1204,22 @@ def genboard(newn:int, newm:int):
   # 2/3/3/3 incursion per oldal
   # mereteik: negy 1-es, harom 2-es, egy 4-es, egy 7-es, egy 9-es, 
   # tehat osszesen kb a felet kene lefedni
+  
+  # tehat 36 elcellara, 11 incursionpoint kell
+  # kb ~3 cellankent 1 incursionpoint kell
+  
+  # hmmmmmm
+  # kozben generaltam egy szep 9x9-est
+  # a sajat kodom altal
+  # ami szinten eleg szep
+  # viszont ennek az elosztasa elegge kulonbozik: 
+  # egy kicsi incursion fent/lent, es ket nagy oldalt
+  # ezek ugy jobban tetszenek
+  # tehat inkabb kevesebb > nagyobb
+  # vagy valahogy preferalja azt, hogy nagyon nagy vagy nagyon kicsi ertekeket generaljon a lehetseges tartomanybol
+  
+  edgcells = 2 * n + 2 * (m-2)
+  incpoints = math.floor(edgcells/3)
   
   compctr:int = 0
   for i in range(1, 2 * n + 1, 2):
@@ -1314,6 +1329,33 @@ def genboard(newn:int, newm:int):
             print(f"Curredge={curredge}")
             
             if(curredge != 0 and curredge != startedge):
+              danger = True
+            
+            # tovabbi kiegeszites: ha a szelen van,
+            # akkor kotelezoen kell legyen mellette egy masik cella, amelyik a szelen van
+            # (es nullas, termeszetesen)
+            
+            atleast = True
+            
+            if(curredge != 0):
+              atleast:bool = False
+              for dir in ortho:     
+                hi, hj = dir # here-i, here-j
+                hi = ci + hi * 2
+                hj = cj + hj * 2
+                
+                if(valid(hi, hj) == False):
+                  continue
+                
+                if(hi == 1 or hi == 2 * n - 1 or hj == 1 or hj == 2 * m - 1): # if on-edge
+                  if(flood[hi][hj] == 0):
+                    atleast = True
+                    break
+            
+            if(ci == i and cj == j):
+              atleast = True
+            
+            if(atleast == False):
               danger = True
             
             print(f"Danger?={danger}") 
