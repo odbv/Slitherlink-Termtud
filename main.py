@@ -12,6 +12,7 @@ from pysat.formula import CNF
 from pysat.formula import IDPool
 import random
 import math
+from queue import PriorityQueue as pq
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -1186,8 +1187,6 @@ def genboard(newn:int, newm:int):
   comp = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8) # grafelmelet
   dist = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int16)
   
-  q = deque()
-  
   # tehat betoltjuk az egesz grid-et
   # es kivulrol inditunk u.n. "incursion"-oket
   # amikkel kivagunk szeleteket belole
@@ -1218,20 +1217,78 @@ def genboard(newn:int, newm:int):
   # tehat inkabb kevesebb > nagyobb
   # vagy valahogy preferalja azt, hogy nagyon nagy vagy nagyon kicsi ertekeket generaljon a lehetseges tartomanybol
   
-  edgcells = 2 * n + 2 * (m-2)
-  incpoints = math.floor(edgcells/3)
-  
   compctr:int = 0
-  for i in range(1, 2 * n + 1, 2):
-    for j in range(1, 2 * m + 1, 2):
-      # skip corners
-      if((i == 1 or i == 2 * n - 1) and (j == 1 or j == 2 * m - 1)):
-        continue
-      if(i == 1 or i == 2 * n - 1 or j == 1 or j == 2 * m - 1): # on edge
-        chance = random.randint(1, 10)
-        if(flood[i][j] == 1 and chance <= 4):
+  
+  toflood = math.floor((n * m)/2)
+  # somewhere between 4 and 8
+  # so one for each side
+  # hmmm
+  # one per side for 5
+  # two per side for 10, etc
+  # tehat visszaterve az elozohoz, kb 4 szelso cellankent egy
+  edgecells = 2 * n + 2 * (m-2)
+  
+  intrusions = random.randint(math.floor(edgecells/5), 2 * math.floor(edgecells/5))
+  
+  values = np.random.dirichlet(np.ones(intrusions)) * toflood # gives back floats, but we can mitigate that
+  
+  random.shuffle(values)
+  
+  print(f"Cells to flood={toflood}")
+  print(f"Intrusions={intrusions}")
+  print(f"Areas={values}")
+  
+  # legeneralunk egy kezdopontot mind a negy oldalra
+  # aztan pedig ujra generalunk, amig kifogyunk a generalando intrusionokbol
+  # (aztan ha kesobb egy intrusionpoint mar el van arasztva, ujrageneraljuk)
+  
+  startq = [(1, 0), (2*n - 1, 0), (0, 1), (0, 2 * m - 1)]
+  nextq = []
+  
+  random.shuffle(startq)
+  
+  bigq = deque()
+  
+  while(intrusions > 0):
+    intrusions -= 1
+    ci, cj = startq.pop()
+    
+    nextq.append((ci, cj))
+    if((len(startq) == 0)):
+      random.shuffle(nextq)
+      for x in nextq:
+        startq.append(x)
+      nextq.clear()
+    
+    if(cj == 0):
+      cj = random.randint(3, 2 * m - 3) # not (1, 2 * m - 1) in order to avoid corners
+    if(ci == 0):
+      ci = random.randint(3, 2 * n - 3)
+      
+    if(cj % 2 == 0):
+      if(random.randint(1,2) == 1):
+        cj -= 1
+      else:
+        cj += 1
+    
+    if(ci % 2 == 0):
+      if(random.randint(1,2) == 1):
+        cj -= 1
+      else:
+        cj += 1
+    
+    bigq.append((ci, cj))
+    
+  for i,j in bigq:
+          if(flood[i][j] == 0):
+            # already flooded
+            # for the moment, skip
+            continue
+            
+          fsize = round(values[compctr])
+            
           print(f"At edge, i={i}, j={j}")
-          print(f"Chance={chance}, currcomp={compctr+1}")
+          print(f"Currcomp={compctr+1}")
           compctr += 1
           # edges: top=1, left=2, down=3, right=4, clockwise
           # if the edge of the current cell isn't equal to its starting edge, 
@@ -1251,17 +1308,58 @@ def genboard(newn:int, newm:int):
           q = deque()
           q.append((i, j))
           dist[i][j] = 0
-          while(len(q) > 0):
+          while(len(q) > 0 and fsize > 0):
             danger:bool = False
             
             ci, cj = q.popleft() # current-i, current-j
-            print(f"ci={ci}, cj={cj}")
+            #print(f"ci={ci}, cj={cj}")
             comp[ci][cj] = compctr
             flood[ci][cj] = 0
-            ortho = [(0, -1), (0, 1), (1, 0), (-1, 0)]
-            random.shuffle(ortho)
-            maxpos = 1 + math.floor(dist[ci][cj]/2)
+            fsize -= 1
+            ortho = []
+            # ortho is carefully designed: first, is the opposite direction from where we're coming
+            # then, left or right are shuffled (or up and down)
+            # then, and only then, the backwards direction
+            if(startedge == 1):
+              ortho.append((1, 0))
+              if(random.randint(1,2) == 1):
+                ortho.append((0, -1))
+                ortho.append((0, 1))
+              else:
+                ortho.append((0, 1))
+                ortho.append((0, -1))
+              ortho.append((-1, 0))
+            elif(startedge == 2):
+              ortho.append((0, -1))
+              if(random.randint(1,2) == 1):
+                ortho.append((1, 0))
+                ortho.append((-1, 0))
+              else:
+                ortho.append((-1, 0))
+                ortho.append((1, 0))
+              ortho.append((0, 1))
+            elif(startedge == 3):
+              ortho.append((-1, 0))
+              if(random.randint(1,2) == 1):
+                ortho.append((0, -1))
+                ortho.append((0, 1))
+              else:
+                ortho.append((0, 1))
+                ortho.append((0, -1))
+              ortho.append((1, 0))
+            elif(startedge == 4):
+              ortho.append((0, 1))
+              if(random.randint(1,2) == 1):
+                ortho.append((1, 0))
+                ortho.append((-1, 0))
+              else:
+                ortho.append((-1, 0))
+                ortho.append((1, 0))
+              ortho.append((0, -1))
+              
+            weight = [100, 90, 80, 70]
             posexp = [] # possible expansions
+            jw = 0
             for dir in ortho:
               
               hi, hj = dir # here-i, here-j
@@ -1282,6 +1380,8 @@ def genboard(newn:int, newm:int):
               
               if(flood[hi][hj] == 1):
                 posexp.append((hi, hj))
+                
+              jw += 1
             
             # masodik feltetel: ha van olyan diagonalis, amelyik csak 0 de nem egy kompban van
             # akkor is rossz
@@ -1326,7 +1426,7 @@ def genboard(newn:int, newm:int):
             elif(cj == 1):
               curredge = 4
             
-            print(f"Curredge={curredge}")
+            #print(f"Curredge={curredge}")
             
             if(curredge != 0 and curredge != startedge):
               danger = True
@@ -1358,10 +1458,11 @@ def genboard(newn:int, newm:int):
             if(atleast == False):
               danger = True
             
-            print(f"Danger?={danger}") 
+            #print(f"Danger?={danger}") 
             
             if(danger == True):
               flood[ci][cj] = 1
+              fsize += 1
             else: 
               for nw in posexp:
                 q.append(nw)
