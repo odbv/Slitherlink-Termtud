@@ -12,7 +12,7 @@ from pysat.formula import CNF
 from pysat.formula import IDPool
 import random
 import math
-from queue import PriorityQueue as pq
+from sortedcontainers import SortedList
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -587,6 +587,7 @@ def getboard(startup:bool, source):
     global n
     global m
     global solcalc
+    global nosol
   
     v = np.zeros((1, 1), dtype=np.int8) # reset-eljuk a vektort
     # kinyitunk egy random file-t a pregenboards-bol
@@ -610,6 +611,7 @@ def getboard(startup:bool, source):
     v = np.zeros((2 * n +1, 2 * m + 1), dtype=np.int8)
     sol = np.zeros((2 * n + 1, 2 *m + 1), dtype=np.int8)
     solcalc = True
+    nosol = False
     
     if(solcheck == 1):
       solcalc = True
@@ -672,6 +674,7 @@ def newgame_insertboard(input:str):
   global n
   global m
   global solcalc
+  global nosol
   
   # feltetelezzuk, hogy n, m < 100
   # kb. ~40 x 40 a max amit tud renderelni
@@ -708,6 +711,7 @@ def newgame_insertboard(input:str):
   print(input)
   
   solcalc = False
+  nosol = False
   
   n = int(mstr)
   m = int(nstr) # this is done because it is width * height in the loopy format
@@ -1146,11 +1150,13 @@ def genboard(newn:int, newm:int):
   global v
   global sol
   global solcalc
+  global nosol
   
   n = newn
   m = newm
   
   solcalc = True
+  nosol = False
   
   v = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
   sol = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
@@ -1219,7 +1225,7 @@ def genboard(newn:int, newm:int):
   
   compctr:int = 0
   
-  toflood = math.floor((n * m)/2)
+  toflood = random.randint(math.ceil((n * m)/2), math.ceil((n * m) * 3/4))
   # somewhere between 4 and 8
   # so one for each side
   # hmmm
@@ -1228,11 +1234,15 @@ def genboard(newn:int, newm:int):
   # tehat visszaterve az elozohoz, kb 4 szelso cellankent egy
   edgecells = 2 * n + 2 * (m-2)
   
-  intrusions = random.randint(math.floor(edgecells/5), 2 * math.floor(edgecells/5))
+  intrusions = math.floor(0.66 * random.randint(math.floor(edgecells/5), 2 * math.floor(edgecells/5)))
   
   values = np.random.dirichlet(np.ones(intrusions)) * toflood # gives back floats, but we can mitigate that
   
-  random.shuffle(values)
+  #random.shuffle(values)
+  values.sort()
+  sizes = deque()
+  for val in reversed(values):
+    sizes.append(math.ceil(val))
   
   print(f"Cells to flood={toflood}")
   print(f"Intrusions={intrusions}")
@@ -1249,8 +1259,7 @@ def genboard(newn:int, newm:int):
   
   bigq = deque()
   
-  while(intrusions > 0):
-    intrusions -= 1
+  for i in range(0, intrusions):
     ci, cj = startq.pop()
     
     nextq.append((ci, cj))
@@ -1261,57 +1270,124 @@ def genboard(newn:int, newm:int):
       nextq.clear()
     
     if(cj == 0):
-      cj = random.randint(3, 2 * m - 3) # not (1, 2 * m - 1) in order to avoid corners
+      cj = random.randint(0, m-1)
+      cj = 1 + 2 * cj
     if(ci == 0):
-      ci = random.randint(3, 2 * n - 3)
-      
-    if(cj % 2 == 0):
-      if(random.randint(1,2) == 1):
-        cj -= 1
-      else:
-        cj += 1
-    
-    if(ci % 2 == 0):
-      if(random.randint(1,2) == 1):
-        cj -= 1
-      else:
-        cj += 1
+      ci = random.randint(0, n-1)
+      ci = 1 + 2 * ci
     
     bigq.append((ci, cj))
+  
+  floodedcells:int = 0
+  
+  aroundedgecurrent = 1 
+  #ari = 1; arj = 1
+  
+  totaltries:int = 0
     
-  for i,j in bigq:
+  totalfailures = 0
+  maxfailures = 20  
+    
+  while (toflood - floodedcells > 0 and totaltries <= intrusions * 5 and totalfailures < maxfailures * 2):
+          i = 1; j = 1
+          
+          if(len(bigq) > 0):
+            i, j = bigq.popleft()
+          else:
+            # go around until we find a possible insertion-point
+            templist = []
+            if(aroundedgecurrent == 1):
+              ari = 1
+              for arj in range(3, 2 * m - 3):
+                if(flood[ari][arj] == 1 and flood[ari][arj-2] == 1 and flood[ari][arj + 2] == 1):
+                  templist.append((ari, arj))
+                
+            elif(aroundedgecurrent == 2):
+              arj = 2 * m - 1
+              for ari in range(3, 2 * n - 3):
+                if(flood[ari][arj] == 1 and flood[ari-2][arj] == 1 and flood[ari+2][arj] == 1):
+                  templist.append((ari, arj))
+            elif(aroundedgecurrent == 3):
+              ari = 2 * n - 1
+              for arj in range(3, 2 * m - 3):
+                if(flood[ari][arj] == 1 and flood[ari][arj-2] == 1 and flood[ari][arj + 2] == 1):
+                  templist.append((ari, arj))
+            elif(aroundedgecurrent == 4):
+              arj = 1
+              for ari in range(3, 2 * n - 3):
+                if(flood[ari][arj] == 1 and flood[ari-2][arj] == 1 and flood[ari+2][arj] == 1):
+                  templist.append((ari, arj))
+              
+            aroundedgecurrent += 1
+            if(aroundedgecurrent > 4):
+              aroundedgecurrent -= 4
+            
+            if(len(templist) == 0):
+              totaltries += 1
+              totalfailures += 1
+              continue
+            else:
+              i, j = templist[random.randint(0, len(templist) - 1)]
+            
+          totaltries += 1
+          
+          print(f"\nAt edge, i={i}, j={j}")
+          print(f"In human terms,i={math.floor((i-1)/2)}, j={math.floor((j-1)/2)}")
+    
           if(flood[i][j] == 0):
             # already flooded
             # for the moment, skip
+            totalfailures += 1
+            print(f"Already flooded ;(")
             continue
-            
-          fsize = round(values[compctr])
-            
-          print(f"At edge, i={i}, j={j}")
+          
+          if(len(sizes) > 0):
+            fsize = sizes.popleft()
+          else:
+            rem = toflood - floodedcells
+            fsize = random.randint(math.ceil(rem/2), math.ceil(rem * 1.25))
+          
+          startsize = fsize
+          
           print(f"Currcomp={compctr+1}")
+          print(f"Size to be={fsize}")
           compctr += 1
           # edges: top=1, left=2, down=3, right=4, clockwise
           # if the edge of the current cell isn't equal to its starting edge, 
           
+          ideali = 0 # "ideal" coordinates, as in, I want the inner "cave" to bloat out here
+          idealj = 0
+          
           startedge = 0
           if(i == 1):
             startedge = 1
+            ideali = 1 + (2 * n - 2) * 0.4
+            idealj = 1 + (2 * m - 2) * 0.5
           elif(j == 2 * m - 1):
             startedge = 2
+            ideali = 1 + (2 * n - 2) * 0.5
+            idealj = 1 + (2 * m - 2) * 0.6
           elif(i == 2 * n - 1):
             startedge = 3
+            ideali = 1 + (2 * n - 2) * 0.6
+            idealj = 1 + (2 * m - 2) * 0.5
           elif(j == 1):
             startedge = 4
+            ideali = 1 + (2 * n - 2) * 0.5
+            idealj = 1 + (2 * m - 2) * 0.4
           
           print(f"startedge={startedge}")
           
-          q = deque()
-          q.append((i, j))
+          q = SortedList()
+          q.add((1, i, j)) # weight, i, j
+          # larger weight to those more inwards/those with more unfamiliar neighbors
+          # weight also depends on place in ortho
+          # and distance from start
           dist[i][j] = 0
           while(len(q) > 0 and fsize > 0):
             danger:bool = False
             
-            ci, cj = q.popleft() # current-i, current-j
+            cw, ci, cj = q.pop(-1) # current-weight (unimportant), current-i, current-j
             #print(f"ci={ci}, cj={cj}")
             comp[ci][cj] = compctr
             flood[ci][cj] = 0
@@ -1356,15 +1432,38 @@ def genboard(newn:int, newm:int):
                 ortho.append((-1, 0))
                 ortho.append((1, 0))
               ortho.append((0, -1))
-              
-            weight = [100, 90, 80, 70]
-            posexp = [] # possible expansions
+            
+            maxorthoweight = 200 
+            maxdistweight = 200
+            
+            maxrandmin = 50
+            maxrandmax = 150
+             
+            orthoweight = [1, 0.9, 0.8, 0.7]
+            posexp = [] # possible expansions, only added if currently considered cell fits
             jw = 0
             for dir in ortho:
               
               hi, hj = dir # here-i, here-j
               hi = ci + hi * 2
               hj = cj + hj * 2
+              
+              hw = 0
+              # weight is influenced by: 
+              # place in ortho
+              # distance from ??? 
+              # heuristic? heatmap? something something create big pockets inside
+              # prefer spaces which are like 40% of m or n
+              # and of course, a healthy dose of randomness
+              
+              distfromperfecti = abs(hi - ideali)
+              distfromperfectj = abs(hj - idealj)
+              
+              distweight = maxdistweight - (distfromperfecti + distfromperfectj)
+              
+              randomweight = random.randint(maxrandmin, maxrandmax)
+              
+              hw = math.floor(maxorthoweight * orthoweight[jw]) + distweight + randomweight
               
               if(valid(hi, hj) == False):
                 continue
@@ -1373,13 +1472,8 @@ def genboard(newn:int, newm:int):
                 danger = True
                 break 
               
-              randhere = random.randint(1, maxpos)
-              maxpos += 1
-              if(randhere != 1):
-                continue
-              
               if(flood[hi][hj] == 1):
-                posexp.append((hi, hj))
+                posexp.append((hw, hi, hj))
                 
               jw += 1
             
@@ -1465,12 +1559,55 @@ def genboard(newn:int, newm:int):
               fsize += 1
             else: 
               for nw in posexp:
-                q.append(nw)
-                hi, hj = nw
-                dist[hi][hj] = dist[ci][cj] + 1       
+                q.add(nw)
+                hw, hi, hj = nw
+                dist[hi][hj] = dist[ci][cj] + 1
+          
+          if(startsize - fsize >= 3):
+            sizes.append(startsize)
+            floodedcells += startsize - fsize       
+  
+  # na es akkor egy par finomitas
+  # ha van egy cella, ami egyedul egy, es korulotte mind zerosok vannak
+  # azt szepen atallitjuk
+  
+  # es majd azutan lefuttattjuk a flood-check-et
+  # ami alapjan ujrageneralja, ha meg mindig vannak kulonallo szigetek
+  
+  for i in range(1, 2 * n + 1, 2):
+    for j in range(1, 2 * m + 1, 2):
+      if(flood[i][j] == 0):
+        continue;
+      sameo = 0 # same, orthogonally
+      # if there is none, but it is still active
+      # we'll just quietly turn this cell off
+      
+      ortho = [(0, -1), (0, 1), (1, 0), (-1, 0)]
+      for dir in ortho:
+        ci, cj = dir
+        ci = i + 2 * ci
+        cj = j + 2 * cj
+        
+        if(valid(ci, cj) and flood[ci][cj] == 1):
+          sameo += 1
+      
+      if(sameo == 0):
+        flood[i][j] = 0
+  
+  # illetve egy apro "wiggliness increase"
+  # a blogposzt alapjan, amire a masodik megoldas alapult
+  # vesszuk a mar meghuzott vonalat, es ahol biztosan lehet
+  # pl, a szelen ahol nincs semmi bemelyedes
+  # vagy ahol van egy "fal", kb
+  # ott is valtjuk a szint
+  
+  print(f"Floodedcells={floodedcells}")
+  print(f"Totaltries={totaltries}, totalfailures={totalfailures}")
   
   print("Flood res:")
   printnumbers(flood, n, m)
+
+  # tehat legutolsonak a floodcheck
 
   for i in range(1, 2 * n + 1, 2):
     for j in range(1, 2 * m + 1, 2):
@@ -1507,6 +1644,11 @@ def genboard(newn:int, newm:int):
       elif(flood[i][j] == 1):
         sol[i][j-1] = 1
         curr += 1
+      
+      # removal rules:
+      # if, 0, 75% chance to remove
+      # if, 1 or 3, 50% chance
+      # if  2, 35%
       
       v[i][j] = curr
       sol[i][j] = v[i][j]
