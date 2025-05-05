@@ -1729,7 +1729,7 @@ def genboard(newn:int, newm:int):
   if(checkifvalid(floodtest) == False):
     genboard(n, m)
     return
-
+  
   for i in range(1, 2 * n + 1, 2):
     for j in range(1, 2 * m + 1, 2):
       # get v values
@@ -1772,19 +1772,68 @@ def genboard(newn:int, newm:int):
       # if, 1 or 3, 50% chance
       # if  2, 35%
       
+      sol[i][j] = curr
+      
       remove = random.randint(1, 100)
       
-      if(curr == 0 and remove <= 70):
+      if(curr == 0 and remove <= 65):
         continue
       
-      if((curr == 1 or curr == 3) and remove <= 45):
+      if((curr == 1 or curr == 3) and remove <= 40):
         continue
       
-      if(curr == 2 and remove <= 30):
+      if(curr == 2 and remove <= 35):
         continue
       
       v[i][j] = curr
-      sol[i][j] = v[i][j]
+
+  # meg egy run-through
+  # ahol sok elem megjelenik, ott egyet-kettot kiszedunk
+  # ahol egy sincs, ott megjelenitunk
+  # az egyszeruseg kedveert a szeleket kihagyjuk
+  
+  cq = deque()
+  
+  for i in range(1, 2 * n + 1, 2):
+    for j in range(1, 2 * m + 1, 2):
+      
+      set:bool = True
+      if(v[i][j] == -1):
+        set = False
+      
+      totaround:int = 0
+      setaround:int = 0
+      samearound:int = 0
+      ortho = [(0,1), (0, -1), (1, 0), (-1, 0)]
+      for dir in ortho:
+        ci, cj = dir
+        ci = i + 2 * ci
+        cj = i + 2 * cj
+        
+        if(valid(ci, cj)):
+          totaround += 1
+          if(v[ci][cj] != -1):
+            setaround += 1
+          if(v[ci][cj] == v[i][j]):
+            samearound += 1
+      
+      if(set):
+        if(totaround == samearound):
+          cq.append((-1, i, j))
+        elif(totaround == setaround):
+          if(random.randint(1, 8) <= 5):
+            cq.append((-1, i, j))
+      else:
+        if(random.randint(1, 3) > 1):
+          cq.append((1, i, j))
+  
+  for change in cq:
+    c, ci, cj = change
+    if(c == -1):
+      v[i][j] = -1
+    else:
+      v[i][j] = sol[i][j]
+              
 
 if __name__ == "__main__":
     main()
