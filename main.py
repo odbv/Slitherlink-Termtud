@@ -76,6 +76,7 @@ meg amúgy az extra memória az nagyon nem befolyásol sokat
 
 '''
 
+# intializes windows and runs the main game loop
 def initwindow():
     global n
     global m
@@ -393,6 +394,7 @@ def initwindow():
       manager.draw_ui(screen)
       pg.display.flip()
 
+# checks whether a given pair of (i, j) coordinates are inside a standardly structured board
 def valid(i, j) -> bool:
   global n
   global m
@@ -402,6 +404,7 @@ def valid(i, j) -> bool:
   else:
     return False
 
+# checks whether the given board configuration is a valid solution
 def checkifvalid(v) -> bool:
   
   global n
@@ -536,6 +539,7 @@ def checkifvalid(v) -> bool:
         
   return True
 
+# initializes filepaths
 def initboards():
     # comment
     global base_dir
@@ -546,7 +550,8 @@ def initboards():
     pregenboardspath = os.path.join(base_dir, 'pregenboards')  # folder is in the same directory as main.py
     resourcespath = os.path.join(base_dir, 'resources')
     #text_files = [f for f in os.listdir(pregenboardspath) if f.endswith('.txt')]
-    
+
+# prints the cell values of a standardly structured board    
 def printtotal(arr, n, m):
     #print("full=\n")
     for i in range(0, 2 * n + 1, 1):
@@ -571,6 +576,7 @@ def printtotal(arr, n, m):
           print(curr, end=" ")
         print(" ")
 
+# prints a standardly structured board
 def printnumbers(arr, n, m):
   #print("numbers=")
   for i in range(1, 2 * n + 1, 2):
@@ -581,6 +587,7 @@ def printnumbers(arr, n, m):
           print(curr, end=" ")
       print(" ")
 
+# reads in a borad from a file
 def getboard(startup:bool, source):
     global v
     global sol
@@ -644,6 +651,7 @@ def getboard(startup:bool, source):
     #if(solcalc):
     #   printtotal(sol, n, m)
 
+# starts a new game, in which the board is pregenerated
 def newgame_pregen(winx, winy):
   root = tk.Tk()
   root.withdraw()
@@ -662,7 +670,8 @@ def newgame_pregen(winx, winy):
   pg.quit()
   initwindow()
 
-def newgame_genboard(newn:int, newm:int):  
+# starts a new game in which a new board will be generated
+def newgame_genboard(newn:int, newm:int):
   start = time.time()
   genboard(newn, newm)
   end = time.time()
@@ -672,6 +681,7 @@ def newgame_genboard(newn:int, newm:int):
   pg.quit()
   initwindow()
 
+# starts a new game in which the board will be initialized based on a Loopy-style ID
 def newgame_insertboard(input:str):
   global v
   global sol
@@ -770,6 +780,7 @@ def newgame_insertboard(input:str):
   pg.quit()
   initwindow()
 
+# starts the program
 def main():
     # kinyitunk egy windowt
     # es felrajzoljuk
@@ -781,6 +792,7 @@ def main():
     
     pg.quit()
 
+# calculates the solution to the current board using a SAT solver
 def calculatesolution():
   global n
   global m
@@ -1148,6 +1160,7 @@ def calculatesolution():
       print(f"{loopcounter} loops found, retrying")
       #return
 
+# generates a new board of given (n, m) dimensions
 def genboard(newn:int, newm:int):
   global n
   global m

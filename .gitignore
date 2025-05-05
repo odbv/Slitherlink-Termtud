@@ -1,3 +1,7 @@
 venv/
 .venv/
 .vscode
+build
+dist
+main.spec
+tosend
