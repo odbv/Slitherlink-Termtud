@@ -5,3 +5,5 @@ build
 dist
 main.spec
 tosend
+test.cnf
+test_mini.cnf

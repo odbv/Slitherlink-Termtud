@@ -1622,6 +1622,9 @@ def genboard(newn:int, newm:int):
   printnumbers(flood, n, m)
   
   maxwiggleincrease = 3 # how many times we loop through the table to try and increaase wiggliness
+  
+  maxwiggleincrease -= math.floor((n * m)/1000)
+  
   for w in (0, maxwiggleincrease):
     for i in range(3, 2 * n - 1, 2): # a szeleket kihagyjuk
       for j in range(3, 2 * m - 1, 2): # ez igazabol inkabb csak kisebb tablaknal latszik meg
@@ -1721,11 +1724,6 @@ def genboard(newn:int, newm:int):
         floodtest[i][j-1] = 1
         curr += 1
       
-      # removal rules:
-      # if, 0, 75% chance to remove
-      # if, 1 or 3, 50% chance
-      # if  2, 35%
-      
       floodtest[i][j] = curr
       
   if(checkifvalid(floodtest) == False):
@@ -1736,6 +1734,7 @@ def genboard(newn:int, newm:int):
     for j in range(1, 2 * m + 1, 2):
       # get v values
       curr = 0
+      v[i][j] = -1
       if(valid(i-2, j)):
         if(flood[i-2][j] != flood[i][j]):
           curr += 1
@@ -1772,6 +1771,17 @@ def genboard(newn:int, newm:int):
       # if, 0, 75% chance to remove
       # if, 1 or 3, 50% chance
       # if  2, 35%
+      
+      remove = random.randint(1, 100)
+      
+      if(curr == 0 and remove <= 70):
+        continue
+      
+      if((curr == 1 or curr == 3) and remove <= 45):
+        continue
+      
+      if(curr == 2 and remove <= 30):
+        continue
       
       v[i][j] = curr
       sol[i][j] = v[i][j]
