@@ -100,3 +100,9 @@ with Glucose42(bootstrap_with=cnf, with_proof=True) as temp:
 # next experiment:
 # we have some points
 # and each must have 
+
+a:int = 1
+b:str = ""
+
+b += str(a)
+print(b)

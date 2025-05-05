@@ -36,8 +36,8 @@ solcalc : bool = False # has the solution been calculated already?
 # ez akkor igaz, ha egy pregeneralt board-ot veszunk
 # vagy ha helyben generalunk egyet
 
-sol = np.zeros((1, 1), dtype=np.int8)
-v = np.zeros((1, 1), dtype=np.int8) # ez lesz a vektor ahol eltaroljuk a dolgokat
+sol = np.zeros((1, 1), dtype=np.int32)
+v = np.zeros((1, 1), dtype=np.int32) # ez lesz a vektor ahol eltaroljuk a dolgokat
 # strukturailag eleg csunya lesz
 # de a lenyeg az
 # kb 3*szor annyi helyet foglal, mert az egesz tablazatot egy 2d's array-ben akarom eltarolni
@@ -256,7 +256,7 @@ def initwindow():
                 new_heregen_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.25 * height), (0.18 * width, 0.15 * height)),text='Generate board',manager=manager)
                 new_insert_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.42 * height), (0.18 * width, 0.15 * height)),text='Insert board',manager=manager)         
             if event.ui_element == checksol_button:
-              valid:bool = checkifvalid()
+              valid:bool = checkifvalid(v)
               showingcorectness = True
             if event.ui_element == showsol_button:
               if(showsol == False):
@@ -402,11 +402,11 @@ def valid(i, j) -> bool:
   else:
     return False
 
-def checkifvalid() -> bool:
+def checkifvalid(v) -> bool:
   
   global n
   global m
-  global v
+  #global v
   global sol
   
   # 3 tests:
@@ -414,8 +414,8 @@ def checkifvalid() -> bool:
   # cell test : checks for each cell, whether its neighbouring active edges equals its value
   # flood test : checks whether a flood fill is able to fill the entire grid
   
-  ground = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
-  vis = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+  ground = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int32)
+  vis = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int32)
   
   # point test
   for i in range(0, 2 * n + 1, 2):
@@ -589,7 +589,7 @@ def getboard(startup:bool, source):
     global solcalc
     global nosol
   
-    v = np.zeros((1, 1), dtype=np.int8) # reset-eljuk a vektort
+    v = np.zeros((1, 1), dtype=np.int32) # reset-eljuk a vektort
     # kinyitunk egy random file-t a pregenboards-bol
     
     #random_file = random.choice(text_files)
@@ -608,8 +608,8 @@ def getboard(startup:bool, source):
     n = int(next(parts))
     m = int(next(parts))
     solcheck = int(next(parts))
-    v = np.zeros((2 * n +1, 2 * m + 1), dtype=np.int8)
-    sol = np.zeros((2 * n + 1, 2 *m + 1), dtype=np.int8)
+    v = np.zeros((2 * n +1, 2 * m + 1), dtype=np.int32)
+    sol = np.zeros((2 * n + 1, 2 *m + 1), dtype=np.int32)
     solcalc = True
     nosol = False
     
@@ -663,7 +663,11 @@ def newgame_pregen(winx, winy):
   initwindow()
 
 def newgame_genboard(newn:int, newm:int):  
+  start = time.time()
   genboard(newn, newm)
+  end = time.time()
+
+  print(f"Took {end-start} seconds")
   
   pg.quit()
   initwindow()
@@ -716,8 +720,8 @@ def newgame_insertboard(input:str):
   n = int(mstr)
   m = int(nstr) # this is done because it is width * height in the loopy format
   
-  v = np.zeros((2 * n + 1 , 2 * m + 1), dtype=np.int8)
-  sol = np.zeros((2 * n + 1 , 2 * m + 1), dtype=np.int8)
+  v = np.zeros((2 * n + 1 , 2 * m + 1), dtype=np.int32)
+  sol = np.zeros((2 * n + 1 , 2 * m + 1), dtype=np.int32)
   
   k:int = 0 # ignore current char counter
   
@@ -1066,8 +1070,8 @@ def calculatesolution():
             ci, cj = indextocord[var_id]
             sol[ci][cj] = value
     
-    ground = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
-    vis = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+    ground = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int32)
+    vis = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int32)
     
     # building ground
     for i in range(0, 2 * n + 1, 2):
@@ -1158,8 +1162,8 @@ def genboard(newn:int, newm:int):
   solcalc = True
   nosol = False
   
-  v = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
-  sol = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
+  v = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int32)
+  sol = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int32)
   
   # valahogy ez még nehezebbnek tűnik, mint a solver
   # mert ott ugye, szigoruan meg van hatarozva, hogy mi a helyes megoldas
@@ -1189,8 +1193,8 @@ def genboard(newn:int, newm:int):
   # tehat most itt az ido, hogy megprobaljunk egyfajta cellular automata-t
   # hogy generaljunk egy blob-ot
   
-  flood = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8)
-  comp = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int8) # grafelmelet
+  flood = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int32)
+  comp = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int32) # grafelmelet
   dist = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int16)
   
   # tehat betoltjuk az egesz grid-et
@@ -1601,6 +1605,61 @@ def genboard(newn:int, newm:int):
   # vagy ahol van egy "fal", kb
   # ott is valtjuk a szint
   
+  print("Pre-wiggle:")
+  printnumbers(flood, n, m)
+  
+  maxwiggleincrease = 3 # how many times we loop through the table to try and increaase wiggliness
+  for w in (0, maxwiggleincrease):
+    for i in range(3, 2 * n - 1, 2): # a szeleket kihagyjuk
+      for j in range(3, 2 * m - 1, 2): # ez igazabol inkabb csak kisebb tablaknal latszik meg
+        if(flood[i][j] == 1):
+          continue
+        # ket eset van amit itt lekezelunk
+        # 0 0 0
+        # 0 0 0
+        # 1 1 1, es szimmetrikusai
+        
+        # illetve
+        # 1 0 0
+        # 1 0 0
+        # 1 1 1, es szimmetrikusat
+        # a szeleket kihagyjuk
+        
+        # mindket esetben, a kozepso cella az, amelyiket epp nezunk a loopban'
+        
+        # mivel mar elegge ki vagyok faradva
+        # elegge kecsegteto, hogy egyszeruen bruteforcal lekezeljem mindket esetet
+        # oh well
+        # akkor legyen
+        
+        switch:bool = False
+        
+        status:str = ""
+        for ci in range(-2, 2 + 1, 2):
+          for cj in range(-2, 2 + 1, 2):
+            hi = i + ci
+            hj = i + cj
+            status += str(flood[hi][hj])
+        
+        validconfs = ["000000111", "111000000", "100100100", "001001001", "100100111", "001001111", "111100100", "111001001"]
+        for conf in validconfs:
+          if(status == conf):
+            switch = True
+            break
+        
+        randmax = 1
+        
+        if(switch and random.randint(1, randmax) == 1):
+          print(f"At i={i},j={j}")
+          print(f"Alt i={math.floor((i -1)/2)}, j={math.floor((i-1)/2)}")
+          print(f"Status={status}")
+          flood[i][j] = 1         
+  # wiggliness-increase turned out to not work
+  # or at least, it's very buggy
+  # it increases loading-times by a LOT
+  # ruining a lot of tables
+  # but it also produces pretty nice ones, so eh, 50% on where I'll leave it
+  
   print(f"Floodedcells={floodedcells}")
   print(f"Totaltries={totaltries}, totalfailures={totalfailures}")
   
@@ -1608,6 +1667,57 @@ def genboard(newn:int, newm:int):
   printnumbers(flood, n, m)
 
   # tehat legutolsonak a floodcheck
+
+  singleloop:bool = True
+
+  floodtest = np.zeros((2 * n + 1, 2 * m + 1), dtype=np.int32)
+  yet:bool = False
+  for i in range(1, 2 * n + 1, 2):
+    for j in range(1, 2 * m + 1, 2):
+      # get v values
+      curr = 0
+      if(valid(i-2, j)):
+        if(flood[i-2][j] != flood[i][j]):
+          curr += 1
+          floodtest[i-1][j] = 1
+      elif(flood[i][j] == 1):
+        floodtest[i-1][j] = 1
+        curr += 1
+      
+      if(valid(i+2, j)):
+        if(flood[i+2][j] != flood[i][j]):
+          curr += 1
+          floodtest[i+1][j] = 1
+      elif(flood[i][j] == 1):
+        floodtest[i+1][j] = 1
+        curr += 1
+      
+      if(valid(i, j+2)):
+        if(flood[i][j+2] != flood[i][j]):
+          curr += 1
+          floodtest[i][j+1] = 1
+      elif(flood[i][j] == 1):
+        floodtest[i][j+1] = 1
+        curr += 1
+        
+      if(valid(i, j-2)):
+        if(flood[i][j-2] != flood[i][j]):
+          curr += 1
+          floodtest[i][j-1] = 1    
+      elif(flood[i][j] == 1):
+        floodtest[i][j-1] = 1
+        curr += 1
+      
+      # removal rules:
+      # if, 0, 75% chance to remove
+      # if, 1 or 3, 50% chance
+      # if  2, 35%
+      
+      floodtest[i][j] = curr
+      
+  if(checkifvalid(floodtest) == False):
+    genboard(n, m)
+    return
 
   for i in range(1, 2 * n + 1, 2):
     for j in range(1, 2 * m + 1, 2):
