@@ -1790,7 +1790,6 @@ def genboard(newn:int, newm:int):
   # meg egy run-through
   # ahol sok elem megjelenik, ott egyet-kettot kiszedunk
   # ahol egy sincs, ott megjelenitunk
-  # az egyszeruseg kedveert a szeleket kihagyjuk
   
   cq = deque()
   
