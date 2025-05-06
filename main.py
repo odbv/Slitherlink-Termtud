@@ -596,7 +596,6 @@ def getboard(startup:bool, source):
     global solcalc
     global nosol
   
-    v = np.zeros((1, 1), dtype=np.int32) # reset-eljuk a vektort
     # kinyitunk egy random file-t a pregenboards-bol
     
     #random_file = random.choice(text_files)
