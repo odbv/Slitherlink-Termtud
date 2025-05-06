@@ -676,6 +676,8 @@ def newgame_genboard(newn:int, newm:int):
   end = time.time()
 
   print(f"Took {end-start} seconds")
+  with open("out.txt", "a") as f:
+    f.write(f"{end-start} \n")
   
   pg.quit()
   initwindow()
@@ -786,6 +788,24 @@ def main():
     initboards()
     
     getboard(True, "dummy")
+    
+    # gyors teszteles a generalas gyorsasagara
+    testfor:int = 1000
+    ntest:int = 25
+    if(testfor > 0):
+      for i in range(0, testfor):
+        
+        start = time.time()
+        genboard(ntest, ntest)
+        end = time.time()
+
+        print(f"Took {end-start} seconds")
+        with open("out.txt", "a") as f:
+          if(i == 0):
+            f.seek(0)
+            f.truncate()
+          f.write(f"{end-start} \n")     
+      return
     
     initwindow()
     
