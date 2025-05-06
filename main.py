@@ -1774,6 +1774,8 @@ def genboard(newn:int, newm:int):
       
       sol[i][j] = curr
       
+      v[i][j] = -1
+      
       remove = random.randint(1, 100)
       
       if(curr == 0 and remove <= 65):
@@ -1831,8 +1833,7 @@ def genboard(newn:int, newm:int):
     if(c == -1):
       v[i][j] = -1
     else:
-      v[i][j] = sol[i][j]
-              
+      v[i][j] = sol[i][j]      
 
 if __name__ == "__main__":
     main()
