@@ -356,7 +356,7 @@ def initwindow():
         validityboxcolor = (109, 9, 143)
         temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
         pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
-        font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), 100) 
+        font = pg.font.Font(os.path.join(resourcespath, "comicsans.ttf"), 100) 
         # ez egy csoppet sketchy
         # atallitom a font size-ot 100-ra manualisan, hogy ezt akkoraba irja ki
         # aztan visszaallitom az alapmeretre
@@ -370,20 +370,20 @@ def initwindow():
               text_surf = font.render("Incorrect solution", True, (255, 255, 255))
               text_rect = text_surf.get_rect(center=temprect.center)
               foreforeground.blit(text_surf, text_rect)
-        font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), fontsize)
+        font = pg.font.Font(os.path.join(resourcespath, "comicsans.ttf"), fontsize)
       
       if(nosol and shownosol):
         validityboxcolor = (138, 32, 32)
         temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
         pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
-        font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), 100) 
+        font = pg.font.Font(os.path.join(resourcespath, "comicsans.ttf"), 100) 
         # pontosan ugyanugy sketchy mint a masik
         # atallitom a font size-ot 100-ra manualisan, hogy ezt akkoraba irja ki
         # aztan visszaallitom az alapmeretre
         text_surf = font.render("No solution exists", True, (255, 255, 255))
         text_rect = text_surf.get_rect(center=temprect.center)
         foreforeground.blit(text_surf, text_rect)
-        font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), fontsize)      
+        font = pg.font.Font(os.path.join(resourcespath, "comicsans.ttf"), fontsize)      
       
       screen.blit(foreforeground, (0,0))
       foreforeground.fill((0,0,0,0))
