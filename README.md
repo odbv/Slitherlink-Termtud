@@ -1,9 +1,14 @@
-Majd szebben is megírom ezt a README-t. De addig is:
+A program részletes leírása megtalálható a Dokumentáció névvel eláttot PDF-ben. 
 
-## Letöltés/használat
+A legrelevánsabb részleteket megjelenítem itt is:
 
-Kontextusképpen, az én setup-om: VSCode-ot használok, a Python verziója 3.13.3, pip-é 25.0.1, a projekt maga egy standard virtual environment-ben fut. A használt package-k (és verzióik) megtalálhatóak a requirements.txt nevű fájlban.
+### Letöltés/használat
 
+Az én setup-om, amivel a programnak nem kéne problémája legyen, hogy működjön:
+* Python 3.13.3
+* pip 25.1.1
+* VSCode-ban írva, egy Python Virtual Environmentet felhasználva
+
+A letöltés folyamata tehát a következő:
 * Copy Repository
-* Kinyitni a main.py-t
 * pip install -r 'requirements.txt'
