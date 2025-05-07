@@ -22,8 +22,8 @@ from sortedcontainers import SortedList
 
 startingfile:str = "example_5x5.txt"
 
-auttesting:bool = True
-istestinginit:bool = True
+auttesting:bool = False
+istestinginit:bool = False
 testing:bool = False
 nosol:bool = False
 
@@ -317,7 +317,7 @@ def initwindow():
           end = time.time()
           if(nosol):
             shownosol = True
-          #print(f"Took {end-start} seconds")
+          print(f"Took {end-start} seconds")
       
       for i in range(0, 2 * n + 1, 1):
         jstart = 0
@@ -437,7 +437,7 @@ def checkifvalid(v) -> bool:
         ground[i][j] = 1
       
       if(actedges != 0 and actedges != 2):
-        #print("Point test failed")
+        print("Point test failed")
         ret = False
         return ret
       
@@ -452,7 +452,7 @@ def checkifvalid(v) -> bool:
       actedges += v[i][j-1]
       actedges += v[i][j+1]
       if(actedges != v[i][j]):
-        #print("Cell test failed")
+        print("Cell test failed")
         ret = False
         return ret              
   
@@ -528,7 +528,7 @@ def checkifvalid(v) -> bool:
   for i in range(0, 2 * n + 1, 1):
     for j in range(0, 2 * m + 1, 1):
       if(ground[i][j] != vis[i][j]):
-        #print("Flood test failed")
+        print("Flood test failed")
         return False 
         
   return True
@@ -627,7 +627,7 @@ def getboard(startup:bool, source):
         for j in range(1, 2 * m + 1, 2):
             #print(f"i={i},j={j}, v[]=", end=" ")
             curr = next(parts)
-            if(curr == '.'):
+            if(curr == '.' or curr == -1):
               v[i][j] = -1
             else:
               v[i][j] = curr
@@ -812,6 +812,14 @@ def automatedtesting():
             f.seek(0)
             f.truncate()
           f.write(f"{end-start} \n")
+          if((end-start) > 60):
+            with open("newb.txt", "a") as f:
+              f.write(f"{ntest} {ntest}\n")
+              for i in range(1, 2 * n + 1, 2):
+                for j in range(1, 2 *  m + 1, 2):
+                  f.write(f"{v[i][j]} ")
+                f.write("\n")
+              f.write("\n")
           
 # starts the program
 def main():
@@ -1104,7 +1112,7 @@ def calculatesolution():
     solvstat:bool = temp.solve()
     
     if(solvstat == False):
-      #print("No possible solution exists")
+      print("No possible solution exists")
       exhausted = True
       nosol = True
       return
@@ -1192,11 +1200,11 @@ def calculatesolution():
           temp.add_clause(neg_clause)
     
     if(loopcounter == 1):
-      #printtotal(sol, n, m)
+      printtotal(sol, n, m)
       return
     else:
       totalsolcounter += 1
-      #print(f"{loopcounter} loops found, retrying")
+      print(f"{loopcounter} loops found, retrying")
       #return
 
 # generates a new board of given (n, m) dimensions
