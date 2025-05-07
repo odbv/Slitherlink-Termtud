@@ -4,6 +4,7 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 import os
+import sys
 from collections import deque
 import time
 from pysat.solvers import Glucose42
@@ -114,6 +115,7 @@ def initwindow():
     clock.tick(60)
     
     manager = pgui.UIManager((width, height), theme_path=os.path.join(resourcespath, "testtheme.json"))
+    manager.add_font_paths("ComicSans", os.path.join("resources", "comicsans.ttf"))
     
     # minden elemrol kideritjuk, hogy micsoda
     # ha pont vagy szam, muszaj felrajzoljuk
@@ -154,7 +156,7 @@ def initwindow():
     
     # tehat ez egy forditott aranyossang : 5 * 18 = max(n,m) * (pointradius_current)    
     
-    font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), fontsize)
+    font = pg.font.Font(os.path.join(resourcespath, "comicsans.ttf"), fontsize)
     
     # rendering a second background?
     pg.draw.rect(background, boardbackgroundcolor, pg.Rect(x1 - 0.02 * width, y1 - 0.02 * width, (x2-x1) * 1.06, (y2-y1) * 1.1))
@@ -826,6 +828,12 @@ def main():
     # kinyitunk egy windowt
     # es felrajzoljuk
     global auttesting
+    
+    # set working directory to script location
+    os.chdir(os.path.dirname(os.path.abspath(sys.argv[0])))
+    
+    #print("Current working dir:", os.getcwd())
+    #print("Font exists:", os.path.exists("resources/comicsans.ttf"))
     
     initboards()
     
