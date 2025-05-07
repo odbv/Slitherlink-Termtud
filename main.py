@@ -114,8 +114,9 @@ def initwindow():
     
     clock.tick(60)
     
-    manager = pgui.UIManager((width, height), theme_path=os.path.join(resourcespath, "testtheme.json"))
-    manager.add_font_paths("ComicSans", os.path.join("resources", "comicsans.ttf"))
+    manager = pgui.UIManager((width, height), enable_live_theme_updates=True)
+    manager.add_font_paths("comicsanstest", os.path.join("resources", "comicsans.ttf"))
+    manager.get_theme().load_theme(os.path.join(resourcespath, "testtheme.json"))
     
     # minden elemrol kideritjuk, hogy micsoda
     # ha pont vagy szam, muszaj felrajzoljuk
