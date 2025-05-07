@@ -18,13 +18,11 @@ from sortedcontainers import SortedList
 # én amikor C++ programozónak érzem magam python-ban
 # mondtam már, hogy utálom a pythont?
 
-# oké, tehát
-# kinyit egy ablakot, es kivalaszt egy random easy slithersnake-t
-# de aztan van egy opcio, hogy valasszon egy uj randomat
-# vagy hogy az ember beadja a sajatjat
+# három hét után: azért nem épp olyan rossz a python se
 
 startingfile:str = "example_5x5.txt"
 
+auttesting:bool = True
 istestinginit:bool = True
 testing:bool = False
 nosol:bool = False
@@ -104,11 +102,11 @@ def initwindow():
     # nem is égeti ki az ember szemét éjszaka
     # de nem is az a full fekete
     
-    background = pg.Surface((width, height))
+    background = pg.Surface((width, height)) # ide kerulnek a szamok
     background.fill(backgroundcolor)
-    foreground = pg.Surface((width, height), pg.SRCALPHA)
+    foreground = pg.Surface((width, height), pg.SRCALPHA) # ide kerulnek a pontok
     foreground.fill((0,0,0,0))
-    foreforeground = pg.Surface((width, height), pg.SRCALPHA)
+    foreforeground = pg.Surface((width, height), pg.SRCALPHA) # ide irunk ki dolgokat
     foreforeground.fill((0,0,0,0))
     
     clock = pg.time.Clock()
@@ -121,6 +119,9 @@ def initwindow():
     # ha pont vagy szam, muszaj felrajzoljuk
     # ha viszont vonal, akkor csak egy lathatatlant rajzolunk be
     # vagyis egy olyant, ami a hatterszinnel egyenlo ;)
+    
+    # vagy legalabbis az volt a terv; igazabol legeneraljuk a teglalap objektumot
+    # anelkul hogy megjelenitenenk
     
     y1:int = 0.10 * height; x1:int = 0.10 * width; # top left corner
     y2:int = 0.85 * height; x2:int = 0.75 * width; # bottom right corner
@@ -208,13 +209,6 @@ def initwindow():
     checksol_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.25 * height), (0.18 * width, 0.15 * height)),text='Check if valid',manager=manager)
     showsol_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.5 * height), (0.18 * width, 0.2 * height)),text='Show Solution',manager=manager)
 
-    # tehat pg.display.update az objektumonkent mukodik
-    # pg.display.flip() baszik rea es ujrarajzol mindent
-    
-    # tehat egy atlagos loopban, amikor csak toggle-elunk egy elt, akkor nekunk csak display.update kell
-    # display.flip csak akkor kell, amikor direkt berajzoljuk az egesz solutiont
-    # mondjuk igazabol akkor is mehet az update, kell egy harmadik array ahol a line objecteket taroljuk
-
     pg.display.flip();
 
     showsol:bool = False
@@ -233,7 +227,7 @@ def initwindow():
       mousepress:bool = False
       mousecords = (1,1)
       for event in pg.event.get():
-        if event.type == pg.QUIT:  # This fires when the window close button is clicked
+        if event.type == pg.QUIT:
             running = False
         if event.type == pg.MOUSEBUTTONDOWN:
           mousepress = True
@@ -323,7 +317,7 @@ def initwindow():
           end = time.time()
           if(nosol):
             shownosol = True
-          print(f"Took {end-start} seconds")
+          #print(f"Took {end-start} seconds")
       
       for i in range(0, 2 * n + 1, 1):
         jstart = 0
@@ -360,7 +354,7 @@ def initwindow():
         temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
         pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
         font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), 100) 
-        # ez kurva sketchy
+        # ez egy csoppet sketchy
         # atallitom a font size-ot 100-ra manualisan, hogy ezt akkoraba irja ki
         # aztan visszaallitom az alapmeretre
         if(valid):
@@ -380,7 +374,7 @@ def initwindow():
         temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
         pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
         font = pg.font.Font(os.path.join(resourcespath, "ComicSansMS.ttf"), 100) 
-        # ez kurva sketchy
+        # pontosan ugyanugy sketchy mint a masik
         # atallitom a font size-ot 100-ra manualisan, hogy ezt akkoraba irja ki
         # aztan visszaallitom az alapmeretre
         text_surf = font.render("No solution exists", True, (255, 255, 255))
@@ -443,7 +437,7 @@ def checkifvalid(v) -> bool:
         ground[i][j] = 1
       
       if(actedges != 0 and actedges != 2):
-        print("Point test failed")
+        #print("Point test failed")
         ret = False
         return ret
       
@@ -458,7 +452,7 @@ def checkifvalid(v) -> bool:
       actedges += v[i][j-1]
       actedges += v[i][j+1]
       if(actedges != v[i][j]):
-        print("Cell test failed")
+        #print("Cell test failed")
         ret = False
         return ret              
   
@@ -534,7 +528,7 @@ def checkifvalid(v) -> bool:
   for i in range(0, 2 * n + 1, 1):
     for j in range(0, 2 * m + 1, 1):
       if(ground[i][j] != vis[i][j]):
-        print("Flood test failed")
+        #print("Flood test failed")
         return False 
         
   return True
@@ -599,6 +593,9 @@ def getboard(startup:bool, source):
     # kinyitunk egy random file-t a pregenboards-bol
     
     #random_file = random.choice(text_files)
+    
+    # de amugy megse
+    
     content = 1
     
     if(startup):
@@ -676,8 +673,6 @@ def newgame_genboard(newn:int, newm:int):
   end = time.time()
 
   print(f"Took {end-start} seconds")
-  with open("out.txt", "a") as f:
-    f.write(f"{end-start} \n")
   
   pg.quit()
   initwindow()
@@ -743,8 +738,8 @@ def newgame_insertboard(input:str):
       for j in range(1, 2 * m + 1, 2):
           #print(f"i={i},j={j}, v[]=", end=" ")
           
-          print(f"i={i},j={j}")
-          print(f"k={k}")
+          #print(f"i={i},j={j}")
+          #print(f"k={k}")
           
           if(k > 0):
             v[i][j] = -1
@@ -754,7 +749,7 @@ def newgame_insertboard(input:str):
           
           curr = next(parts)
           
-          print(f"curr={curr}")
+          #print(f"curr={curr}")
           
           if(str.isalpha(curr)):
             k += ord(curr) - ord('a')
@@ -781,30 +776,55 @@ def newgame_insertboard(input:str):
   pg.quit()
   initwindow()
 
-# starts the program
-def main():
-    # kinyitunk egy windowt
-    # es felrajzoljuk
-    initboards()
-    
-    getboard(True, "dummy")
-    
-    # gyors teszteles a generalas gyorsasagara
+# tests generation/solution speed
+def automatedtesting():
+  # gyors teszteles a generalas gyorsasagara
     testfor:int = 1000
-    ntest:int = 25
-    if(testfor > 0):
-      for i in range(0, testfor):
-        
+    ntest:int = 40
+    soltest:bool = True # if false, it test generation time
+    # if true, it tests solution time
+    for i in range(0, testfor):
+      
+      if(soltest == False):    
         start = time.time()
         genboard(ntest, ntest)
         end = time.time()
 
-        print(f"Took {end-start} seconds")
+        print(f"Test {i+1}:Took {end-start} seconds")
         with open("out.txt", "a") as f:
           if(i == 0):
             f.seek(0)
             f.truncate()
-          f.write(f"{end-start} \n")     
+          f.write(f"{end-start} \n")
+      else:
+        start = time.time()
+        genboard(ntest, ntest)
+        end = time.time()
+        print(f"Test {i+1}: Generation took {end-start} seconds")
+        
+        start = time.time()
+        calculatesolution()
+        end = time.time()
+
+        print(f"Test {i+1}: Solution took {end-start} seconds")
+        with open("out.txt", "a") as f:
+          if(i == 0):
+            f.seek(0)
+            f.truncate()
+          f.write(f"{end-start} \n")
+          
+# starts the program
+def main():
+    # kinyitunk egy windowt
+    # es felrajzoljuk
+    global auttesting
+    
+    initboards()
+    
+    getboard(True, "dummy")
+    
+    if(auttesting):
+      automatedtesting()     
       return
     
     initwindow()
@@ -1079,12 +1099,12 @@ def calculatesolution():
 
   while(exhausted == False):
     
-    print(f"Current solution:{totalsolcounter}")
+    #print(f"Current solution:{totalsolcounter}")
     
     solvstat:bool = temp.solve()
     
     if(solvstat == False):
-      print("No possible solution exists")
+      #print("No possible solution exists")
       exhausted = True
       nosol = True
       return
@@ -1172,11 +1192,11 @@ def calculatesolution():
           temp.add_clause(neg_clause)
     
     if(loopcounter == 1):
-      printtotal(sol, n, m)
+      #printtotal(sol, n, m)
       return
     else:
       totalsolcounter += 1
-      print(f"{loopcounter} loops found, retrying")
+      #print(f"{loopcounter} loops found, retrying")
       #return
 
 # generates a new board of given (n, m) dimensions
@@ -1280,9 +1300,9 @@ def genboard(newn:int, newm:int):
   for val in reversed(values):
     sizes.append(math.ceil(val))
   
-  print(f"Cells to flood={toflood}")
-  print(f"Intrusions={intrusions}")
-  print(f"Areas={values}")
+  #print(f"Cells to flood={toflood}")
+  #print(f"Intrusions={intrusions}")
+  #print(f"Areas={values}")
   
   # legeneralunk egy kezdopontot mind a negy oldalra
   # aztan pedig ujra generalunk, amig kifogyunk a generalando intrusionokbol
@@ -1367,14 +1387,14 @@ def genboard(newn:int, newm:int):
             
           totaltries += 1
           
-          print(f"\nAt edge, i={i}, j={j}")
-          print(f"In human terms,i={math.floor((i-1)/2)}, j={math.floor((j-1)/2)}")
+          #print(f"\nAt edge, i={i}, j={j}")
+          #print(f"In human terms,i={math.floor((i-1)/2)}, j={math.floor((j-1)/2)}")
     
           if(flood[i][j] == 0):
             # already flooded
             # for the moment, skip
             totalfailures += 1
-            print(f"Already flooded ;(")
+            #print(f"Already flooded ;(")
             continue
           
           if(len(sizes) > 0):
@@ -1385,8 +1405,8 @@ def genboard(newn:int, newm:int):
           
           startsize = fsize
           
-          print(f"Currcomp={compctr+1}")
-          print(f"Size to be={fsize}")
+          #print(f"Currcomp={compctr+1}")
+          #print(f"Size to be={fsize}")
           compctr += 1
           # edges: top=1, left=2, down=3, right=4, clockwise
           # if the edge of the current cell isn't equal to its starting edge, 
@@ -1412,7 +1432,7 @@ def genboard(newn:int, newm:int):
             ideali = 1 + (2 * n - 2) * 0.5
             idealj = 1 + (2 * m - 2) * 0.4
           
-          print(f"startedge={startedge}")
+          #print(f"startedge={startedge}")
           
           q = SortedList()
           q.add((1, i, j)) # weight, i, j
@@ -1637,8 +1657,8 @@ def genboard(newn:int, newm:int):
   # vagy ahol van egy "fal", kb
   # ott is valtjuk a szint
   
-  print("Pre-wiggle:")
-  printnumbers(flood, n, m)
+  #print("Pre-wiggle:")
+  #printnumbers(flood, n, m)
   
   maxwiggleincrease = 3 # how many times we loop through the table to try and increaase wiggliness
   
@@ -1685,9 +1705,9 @@ def genboard(newn:int, newm:int):
         randmax = 1
         
         if(switch and random.randint(1, randmax) == 1):
-          print(f"At i={i},j={j}")
-          print(f"Alt i={math.floor((i -1)/2)}, j={math.floor((i-1)/2)}")
-          print(f"Status={status}")
+          #print(f"At i={i},j={j}")
+          #print(f"Alt i={math.floor((i -1)/2)}, j={math.floor((i-1)/2)}")
+          #print(f"Status={status}")
           flood[i][j] = 1         
   # wiggliness-increase turned out to not work
   # or at least, it's very buggy
@@ -1695,11 +1715,11 @@ def genboard(newn:int, newm:int):
   # ruining a lot of tables
   # but it also produces pretty nice ones, so eh, 50% on where I'll leave it
   
-  print(f"Floodedcells={floodedcells}")
-  print(f"Totaltries={totaltries}, totalfailures={totalfailures}")
+  #print(f"Floodedcells={floodedcells}")
+  #print(f"Totaltries={totaltries}, totalfailures={totalfailures}")
   
-  print("Flood res:")
-  printnumbers(flood, n, m)
+  #print("Flood res:")
+  #printnumbers(flood, n, m)
 
   # tehat legutolsonak a floodcheck
 
