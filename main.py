@@ -783,7 +783,7 @@ def newgame_insertboard(input:str):
 def automatedtesting():
   # gyors teszteles a generalas gyorsasagara
     testfor:int = 1000
-    ntest:int = 40
+    ntest:int = 5
     soltest:bool = True # if false, it test generation time
     # if true, it tests solution time
     for i in range(0, testfor):
