@@ -543,7 +543,12 @@ def initboards():
     #global text_files
     global pregenboardspath
     global resourcespath
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    if getattr(sys, 'frozen', False):  # running as EXE
+      base_dir = os.path.dirname(sys.executable)
+    else:
+      base_dir = os.path.dirname(os.path.abspath(__file__))
+    
     pregenboardspath = os.path.join(base_dir, 'pregenboards')  # folder is in the same directory as main.py
     resourcespath = os.path.join(base_dir, 'resources')
     #text_files = [f for f in os.listdir(pregenboardspath) if f.endswith('.txt')]
