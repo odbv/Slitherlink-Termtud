@@ -831,6 +831,8 @@ def automatedtesting():
           
 # starts the program
 def main():
+    # test comment
+
     # kinyitunk egy windowt
     # es felrajzoljuk
     global auttesting
