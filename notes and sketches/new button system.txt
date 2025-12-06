@@ -1,0 +1,30 @@
+Not the most glamorous,but it's long overdue
+
+SO
+
+new function: buttonloader
+or something along those lines
+
+there is a list
+with a list of boolean values
+and those values correspond to a button
+and if true, that button is drawn
+and if false, the button is not drawn
+
+and its handled dynamically, such that the next button is drawn to the next available position
+
+for example
+let's say I have state[0] = {1, 1, 1, 0} and state[1] = {1, 1, 0, 1}
+
+and so when I get to drawing the buttons, I go
+
+button 0: new game-> drawn
+button 1: check -> drawn
+button 2: show solution -> drawn
+button 3: hide solution -> not drawn
+
+and it'd be way easier to create new states
+since I'd just have to modify which state to call
+and the states can be described independently/stored somewhere else
+
+I've been thinking- if I end up working some more on Slitherlink, I might as well submit it to the Neumann contest as well, if it is polished somewhat

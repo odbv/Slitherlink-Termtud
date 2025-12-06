@@ -1,0 +1,6 @@
+Some new ideas/quality of life features that might be worth doing:
+- reset button
+- hint button
+- auto-sizing the window
+- undo button
+- export current board: exports both in its "own" format (as in the pregenboards) and in the "loopy" format, in two .txt files (and this means another button)
