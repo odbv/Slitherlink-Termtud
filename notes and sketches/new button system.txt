@@ -28,3 +28,10 @@ since I'd just have to modify which state to call
 and the states can be described independently/stored somewhere else
 
 I've been thinking- if I end up working some more on Slitherlink, I might as well submit it to the Neumann contest as well, if it is polished somewhat
+
+----------------
+
+a tad different
+
+pass a list of strings as argument
+and then for each button check whether it's "name" is included, and if so, draw it
