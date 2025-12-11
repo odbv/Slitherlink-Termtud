@@ -93,15 +93,25 @@ def initwindow():
     pg.init()
 
     effectivedisplaysize = pg.display.Info()
-    effh = effectivedisplaysize.current_h * 0.8
-    effw = effectivedisplaysize.current_w * 0.8
+    effh = effectivedisplaysize.current_h
+    effw = effectivedisplaysize.current_w
 
     # ha a display nem 16:9
     # akkor vesszuk azt a vonalat, amely vonatkozasilag kisebbb
     # es a masikat ahhoz igazitjuk
+    
+    effh_act = effh / 16
+    effw_act = effw / 9
+    
+    if(effh_act != effw_act):
+        # vesszuk a kisebbet, es a masikat atallitjuk
+        if(effh_act < effw_act):
+          effw = (effh * 16)/9        
+        else:
+          effh = (effw * 9)/16
 
-    height:int = effh
-    width:int = effw
+    height:int = int(effh * 0.8)
+    width:int = int(effw * 0.8)
     # game is scaled at a baseline for w:1600 h:900
  
     sizefactor:float = float(width)/float(1600)
