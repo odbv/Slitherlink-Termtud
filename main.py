@@ -14,6 +14,7 @@ from pysat.formula import IDPool
 import random
 import math
 from sortedcontainers import SortedList
+import json
 
 # I have literally zero idea what I'm doing
 # én amikor C++ programozónak érzem magam python-ban
@@ -90,8 +91,24 @@ def initwindow():
     
     # pygame, do your magic  
     pg.init()
-    height:int = 900
-    width:int = 1600
+
+    effectivedisplaysize = pg.display.Info()
+    effh = effectivedisplaysize.current_h * 0.8
+    effw = effectivedisplaysize.current_w * 0.8
+
+    # ha a display nem 16:9
+    # akkor vesszuk azt a vonalat, amely vonatkozasilag kisebbb
+    # es a masikat ahhoz igazitjuk
+
+    height:int = effh
+    width:int = effw
+    # game is scaled at a baseline for w:1600 h:900
+ 
+    sizefactor:float = float(width)/float(1600)
+    #sizefactor = 1
+
+    print(f"Sizefactor = {sizefactor}")
+
     screen = pg.display.set_mode((width,height))
     pg.display.set_caption("Slitherlink")
     pg.display.init()
@@ -114,10 +131,23 @@ def initwindow():
     
     clock.tick(60)
     
+    buttonfontsize:int = int(36 * sizefactor)
+
+    # modify theme before loading it into manager
+    theme_path = os.path.join(resourcespath, "testtheme.json")
+
+    with open(theme_path, "r") as f:
+        theme_data = json.load(f)
+
+    theme_data["button"]["font"]["size"] = buttonfontsize
+
+    with open(theme_path, "w") as f:
+        json.dump(theme_data, f, indent=4)
+
     manager = pgui.UIManager((width, height), enable_live_theme_updates=True)
     manager.add_font_paths("comicsanstest", os.path.join("resources", "comicsans.ttf"))
-    manager.get_theme().load_theme(os.path.join(resourcespath, "testtheme.json"))
-    
+    manager.get_theme().load_theme(os.path.join(theme_path))
+
     # minden elemrol kideritjuk, hogy micsoda
     # ha pont vagy szam, muszaj felrajzoljuk
     # ha viszont vonal, akkor csak egy lathatatlant rajzolunk be
@@ -144,7 +174,10 @@ def initwindow():
     cy:int = y1;
     cx:int = x1
     
-    pointradius = (5 * 18)/max(n,m);
+    # alapmeret: 1600
+    # vegyuk a mostani width/1600 mint szorzotenyezo
+
+    pointradius = (5 * 18)/max(n,m) * sizefactor;
     fontsize = int(pointradius * 3.33)
     
     # dynamic point radius calculation
@@ -259,9 +292,11 @@ def initwindow():
             if event.ui_element == showsol_button:
               if(showsol == False):
                 showsol = True
+                shownosol = True
                 showsol_button.set_text("Hide Solution")
               else:
                 showsol = False
+                shownosol = False
                 showsol_button.set_text("Show Solution")
           elif(stage == 1):
             if event.ui_element == new_pregen_button:
@@ -318,8 +353,6 @@ def initwindow():
           start = time.time()
           calculatesolution()
           end = time.time()
-          if(nosol):
-            shownosol = True
           print(f"Took {end-start} seconds")
       
       for i in range(0, 2 * n + 1, 1):
@@ -352,11 +385,13 @@ def initwindow():
       
       screen.blit(foreground, (0,0))
       
-      if(showingcorectness):
+      correctnessfontsize = fontsize
+      if(showingcorectness and nosol == False):
         validityboxcolor = (109, 9, 143)
         temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
         pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
-        font = pg.font.Font(os.path.join(resourcespath, "comicsans.ttf"), 100) 
+        correctnessfontsize = int(1.75 * fontsize)
+        font = pg.font.Font(os.path.join(resourcespath, "comicsans.ttf"), correctnessfontsize) 
         # ez egy csoppet sketchy
         # atallitom a font size-ot 100-ra manualisan, hogy ezt akkoraba irja ki
         # aztan visszaallitom az alapmeretre
@@ -376,7 +411,8 @@ def initwindow():
         validityboxcolor = (138, 32, 32)
         temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
         pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
-        font = pg.font.Font(os.path.join(resourcespath, "comicsans.ttf"), 100) 
+        correctnessfontsize = int(1.2 * fontsize)
+        font = pg.font.Font(os.path.join(resourcespath, "comicsans.ttf"), correctnessfontsize) 
         # pontosan ugyanugy sketchy mint a masik
         # atallitom a font size-ot 100-ra manualisan, hogy ezt akkoraba irja ki
         # aztan visszaallitom az alapmeretre

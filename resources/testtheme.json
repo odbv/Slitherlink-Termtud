@@ -1,69 +1,50 @@
 {
-
-    "button":
-
-    {
-        "colours":
-        {
+    "button": {
+        "colours": {
             "normal_border": "White",
             "normal_bg": "SlateGray",
             "normal_text": "White"
-
         },
-        "font":{
+        "font": {
             "name": "comicsanstest",
-            "size": "36"
+            "size": 51
         },
-        "misc":
-        {
+        "misc": {
             "shape": "rounded_rectangle",
             "shape_corner_radius": "10",
             "border_width": "2"
         }
     },
-
-    "label":
-    {
-        "colours":
-        {
+    "label": {
+        "colours": {
             "normal_border": "White",
             "normal_bg": "SlateGray",
             "normal_text": "White"
-
         },
-        "font":{
+        "font": {
             "name": "comicsanstest",
             "size": "36"
         },
-        "misc":
-        {
+        "misc": {
             "shape": "rounded_rectangle",
             "shape_corner_radius": "10",
             "border_width": "2"
         }
     },
-
-    "textentryline":
-    {
-        "colours":
-        {
+    "textentryline": {
+        "colours": {
             "normal_border": "White",
             "normal_bg": "SlateGray",
             "normal_text": "White"
-
         },
-        "font":{
+        "font": {
             "name": "comicsanstest",
             "size": "36"
         },
-        "misc":
-        {
+        "misc": {
             "shape": "rounded_rectangle",
             "shape_corner_radius": "10",
             "border_width": "2"
         }
     }
-
-
-
 }

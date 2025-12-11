@@ -1,0 +1,10 @@
+- on laptop: after opening a new game by loading from file, trying to open another one from file leads to a crash
+"
+
+X Error of failed request:  BadWindow (invalid Window parameter)
+  Major opcode of failed request:  15 (X_QueryTree)
+  Resource id in failed request:  0x4400006
+  Serial number of failed request:  1926
+  Current serial number in output stream:  1926
+
+"
