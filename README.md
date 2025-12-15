@@ -1,4 +1,4 @@
-A program részletes leírása megtalálható a Dokumentáció névvel eláttot PDF-ben. 
+A program részletes leírása megtalálható a [Dokumentáció](<Orbán Dávid - Slitherlink [Dokumentáció] [2025-05-07].pdf>) névvel eláttot PDF-ben.
 
 ### Letöltés/használat
 
