@@ -187,8 +187,9 @@ def initwindow():
     # alapmeret: 1600
     # vegyuk a mostani width/1600 mint szorzotenyezo
 
-    pointradius = (5 * 18)/max(n,m) * sizefactor;
+    pointradius = (5 * 18)/max(n,m) * sizefactor
     fontsize = int(pointradius * 3.33)
+    letterfontsize = int(700/8 * sizefactor)
     
     # dynamic point radius calculation
     # it's no sweat
@@ -333,7 +334,7 @@ def initwindow():
               new_insert_button.kill()
               
               stage = 3
-              label = pgui.elements.UILabel(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.05 * height)),text="Game ID:", manager=manager)
+              label = pgui.elements.UILabel(relative_rect=pg.Rect((0.8 * width, 0.08 * height), (0.18 * width, 0.06 * height)),text="Game ID:", manager=manager)
               loopystring = pgui.elements.UITextEntryLine(relative_rect=pg.Rect((0.8 * width, 0.15 * height), (0.18 * width, 0.05 * height)), manager=manager)
               submit_button = pgui.elements.UIButton(relative_rect=pg.Rect((0.8 * width, 0.22 * height), (0.18 * width, 0.08 * height)),text='Submit',manager=manager)
           
@@ -395,12 +396,15 @@ def initwindow():
       
       screen.blit(foreground, (0,0))
       
-      correctnessfontsize = fontsize
+      correctnessfontsize = letterfontsize
       if(showingcorectness and nosol == False):
         validityboxcolor = (109, 9, 143)
         temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
         pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
-        correctnessfontsize = int(1.75 * fontsize)
+        #correctnessfontsize = 70
+        # int(fontsize * sizefactor)
+        #min(int(1.75 * fontsize), 50)
+        print(f"fontsize={correctnessfontsize}")
         font = pg.font.Font(os.path.join(resourcespath, "comicsans.ttf"), correctnessfontsize) 
         # ez egy csoppet sketchy
         # atallitom a font size-ot 100-ra manualisan, hogy ezt akkoraba irja ki
@@ -421,7 +425,9 @@ def initwindow():
         validityboxcolor = (138, 32, 32)
         temprect = pg.Rect(width * 0.1, height * 0.2, width * 0.65, height * 0.5)
         pg.draw.rect(foreforeground, validityboxcolor, temprect, border_radius=100)
-        correctnessfontsize = int(1.2 * fontsize)
+        correctnessfontsize = 70
+        #int(1.2 * fontsize)
+        
         font = pg.font.Font(os.path.join(resourcespath, "comicsans.ttf"), correctnessfontsize) 
         # pontosan ugyanugy sketchy mint a masik
         # atallitom a font size-ot 100-ra manualisan, hogy ezt akkoraba irja ki
